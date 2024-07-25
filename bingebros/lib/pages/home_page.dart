@@ -17,8 +17,18 @@ class HomePage extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () async {
-              await _auth.signOut();
-              Navigator.pushReplacementNamed(context, '/');
+              try {
+                await _auth.signOut();
+                // Navigate to sign-in page after successful sign-out
+                Navigator.pushReplacementNamed(context, '/');
+              } catch (e) {
+                // Handle any errors that occur during sign-out
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error signing out. Please try again.'),
+                  ),
+                );
+              }
             },
           ),
         ],

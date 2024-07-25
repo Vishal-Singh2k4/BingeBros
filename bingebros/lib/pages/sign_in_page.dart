@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'sign_up_page.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'home_page.dart';
+import 'username_setup_page.dart';
 
 class SignInPage extends StatefulWidget {
   @override
@@ -8,62 +10,48 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  String errorMessage = '';
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  Future<void> signIn() async {
-    setState(() {
-      errorMessage = '';
-    });
-
-    if (emailController.text.isEmpty) {
-      setState(() {
-        errorMessage = 'Email cannot be empty.';
-      });
-      return;
-    }
-
-    if (passwordController.text.isEmpty) {
-      setState(() {
-        errorMessage = 'Password cannot be empty.';
-      });
-      return;
-    }
-
+  Future<void> _googleSignInFunction() async {
     try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
+      // Initiates the Google Sign-In flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser == null) {
+        return; // The user canceled the sign-in
+      }
+
+      // Get the authentication details from the Google account
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
-      Navigator.pushReplacementNamed(context, '/home');
-    } catch (e) {
-      setState(() {
-        if (e is FirebaseAuthException) {
-          switch (e.code) {
-            case 'invalid-email':
-              errorMessage = 'The email address is badly formatted.';
-              break;
-            case 'user-not-found':
-              errorMessage = 'No user found for that email.';
-              break;
-            case 'wrong-password':
-              errorMessage = 'Wrong password provided for that user.';
-              break;
-            case 'user-disabled':
-              errorMessage = 'The user account has been disabled.';
-              break;
-            case 'too-many-requests':
-              errorMessage = 'Too many requests. Try again later.';
-              break;
-            default:
-              errorMessage = 'Invalid Password';
-          }
+
+      // Sign in with Firebase
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+      User? user = userCredential.user;
+
+      if (user != null) {
+        if (userCredential.additionalUserInfo!.isNewUser) {
+          // Redirect to a page for additional setup
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => UsernameSetupPage()),
+          );
         } else {
-          errorMessage = 'An error occurred. Please try again.';
+          // Redirect to the home page for existing users
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
         }
-      });
+      }
+    } catch (e) {
+      print(e.toString());
     }
   }
 
@@ -73,37 +61,14 @@ class _SignInPageState extends State<SignInPage> {
       appBar: AppBar(
         title: Text('Sign In'),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextField(
-              controller: emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            SizedBox(height: 20),
             ElevatedButton(
-              onPressed: signIn,
-              child: Text('Sign In'),
+              onPressed: _googleSignInFunction,
+              child: Text('Sign in with Google'),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/signUp');
-              },
-              child: Text('Don\'t have an account? Sign Up'),
-            ),
-            SizedBox(height: 20),
-            if (errorMessage.isNotEmpty)
-              Text(
-                errorMessage,
-                style: TextStyle(color: Colors.red),
-              ),
           ],
         ),
       ),
