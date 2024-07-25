@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/home_page.dart';
-import 'pages/username_setup_page.dart'; // Import the new page
+import 'pages/username_setup_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
