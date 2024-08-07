@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:binge/routes/routes.dart';
-import 'package:binge/providers/auth_provider.dart';
+import 'package:binge/providers/AuthProvider.dart'
+    as custom_auth; // Alias for custom AuthProvider
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -18,25 +20,30 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _startDelay() async {
-    await Future.delayed(
-        Duration(milliseconds: 3500)); // Add delay for visibility
+    await Future.delayed(Duration(milliseconds: 3500));
     _checkStatus();
   }
 
   Future<void> _checkStatus() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool onboardingCompleted = prefs.getBool('onboardingCompleted') ?? false;
+    final authProvider =
+        Provider.of<custom_auth.AuthProvider>(context, listen: false);
 
-    if (authProvider.isLoggedIn) {
-      Navigator.pushReplacementNamed(
-          context, Routes.home); // Navigate to home page
-    } else if (onboardingCompleted) {
-      Navigator.pushReplacementNamed(
-          context, Routes.login); // Navigate to login page
+    // Check Firebase Auth state
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      // User is logged in
+      Navigator.pushReplacementNamed(context, Routes.home);
     } else {
-      Navigator.pushReplacementNamed(
-          context, Routes.onboarding); // Navigate to onboarding page
+      // User is not logged in, check onboarding status
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      bool onboardingCompleted = prefs.getBool('onboardingCompleted') ?? false;
+
+      if (onboardingCompleted) {
+        Navigator.pushReplacementNamed(context, Routes.signIn);
+      } else {
+        Navigator.pushReplacementNamed(context, Routes.onboarding);
+      }
     }
   }
 
@@ -50,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: backgroundColor,
       body: Center(
         child: Lottie.asset(
-          'assets/Animation - 1722392924740.json', // Updated path
+          'assets/Animation - 1722392924740.json',
           width: 200,
           height: 200,
           fit: BoxFit.fill,

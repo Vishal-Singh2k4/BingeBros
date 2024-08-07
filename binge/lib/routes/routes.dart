@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:binge/pages/home.dart';
-import 'package:binge/pages/login_screen.dart';
-import 'package:binge/pages/sign_in_page.dart'; // Updated import
-import 'package:binge/pages/splashscreen.dart';
-import 'package:binge/pages/onboarding.dart';
+import 'package:binge/pages/HomePage.dart';
+import 'package:binge/pages/SplashScreen.dart';
+import 'package:binge/pages/OnboardingPage.dart';
+import 'package:binge/pages/SignInPage.dart';
+import 'package:binge/pages/UsernameSetupPage.dart';
 
 class Routes {
   static const String home = '/home';
@@ -11,19 +11,20 @@ class Routes {
   static const String signIn = '/signIn';
   static const String splash = '/splash';
   static const String onboarding = '/onboarding';
+  static const String usernameSetup = '/usernameSetup';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case home:
         return MaterialPageRoute(builder: (_) => HomePage());
-      case login:
-        return MaterialPageRoute(builder: (_) => LoginScreen());
-      case signIn: // Updated case
-        return MaterialPageRoute(builder: (_) => SignInPage());
       case splash:
         return MaterialPageRoute(builder: (_) => SplashScreen());
       case onboarding:
         return MaterialPageRoute(builder: (_) => OnboardingPage());
+      case signIn:
+        return MaterialPageRoute(builder: (_) => SignInPage());
+      case usernameSetup:
+        return MaterialPageRoute(builder: (_) => UsernameSetupPage());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
