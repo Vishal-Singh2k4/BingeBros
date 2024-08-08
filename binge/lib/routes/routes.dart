@@ -4,6 +4,7 @@ import 'package:binge/pages/SplashScreen.dart';
 import 'package:binge/pages/OnboardingPage.dart';
 import 'package:binge/pages/SignInPage.dart';
 import 'package:binge/pages/UsernameSetupPage.dart';
+import 'package:binge/pages/MyVerify.dart'; // Add this import
 
 class Routes {
   static const String home = '/home';
@@ -12,6 +13,7 @@ class Routes {
   static const String splash = '/splash';
   static const String onboarding = '/onboarding';
   static const String usernameSetup = '/usernameSetup';
+  static const String verify = '/verify'; // Add this route
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -25,6 +27,10 @@ class Routes {
         return MaterialPageRoute(builder: (_) => SignInPage());
       case usernameSetup:
         return MaterialPageRoute(builder: (_) => UsernameSetupPage());
+      case verify:
+        final String phoneNumber = settings.arguments as String;
+        return MaterialPageRoute(
+            builder: (_) => MyVerify(phoneNumber: phoneNumber));
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
