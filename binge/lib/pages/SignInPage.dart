@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:binge/routes/routes.dart';
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 class SignInPage extends StatefulWidget {
   @override
@@ -11,8 +12,8 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
-  TextEditingController phoneController = TextEditingController();
-  TextEditingController countryController = TextEditingController(text: "+91");
+  final TextEditingController phoneController = TextEditingController();
+  PhoneNumber phoneNumber = PhoneNumber(isoCode: 'IN'); // Default country code
 
   Future<void> _googleSignInFunction() async {
     try {
@@ -47,11 +48,36 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   void _sendPhoneNumberVerification() {
-    String phoneNumber = '${countryController.text}${phoneController.text}';
+    final phoneNumberStr = phoneNumber.phoneNumber ?? '';
+    // Print phone number for debugging
+    print("Phone Number with country code: $phoneNumberStr");
+
+    // Validate phone number
+    if (phoneNumberStr.isEmpty) {
+      _showError("Phone number cannot be empty.");
+      return;
+    }
+
+    // Validate phone number format
+    final RegExp phoneRegExp = RegExp(r'^\+?\d{10,15}$');
+    if (!phoneRegExp.hasMatch(phoneNumberStr)) {
+      _showError("Invalid phone number format.");
+      return;
+    }
+
     Navigator.pushNamed(
       context,
       Routes.verify,
-      arguments: phoneNumber,
+      arguments: phoneNumberStr,
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
     );
   }
 
@@ -124,40 +150,35 @@ class _SignInPageState extends State<SignInPage> {
                         color:
                             isDarkMode ? Color(0xFF282828) : Colors.grey[300]!),
                   ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 50,
-                        child: TextField(
-                          controller: countryController,
-                          keyboardType: TextInputType.number,
-                          style: TextStyle(color: primaryTextColor),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "+91",
-                            hintStyle: TextStyle(color: secondaryTextColor),
-                          ),
-                        ),
-                      ),
-                      VerticalDivider(
-                        color:
-                            isDarkMode ? Color(0xFF282828) : Colors.grey[300]!,
-                        thickness: 1,
-                        width: 20,
-                      ),
-                      Expanded(
-                        child: TextField(
-                          controller: phoneController,
-                          keyboardType: TextInputType.phone,
-                          style: TextStyle(color: primaryTextColor),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Phone Number",
-                            hintStyle: TextStyle(color: secondaryTextColor),
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: InternationalPhoneNumberInput(
+                    onInputChanged: (PhoneNumber number) {
+                      setState(() {
+                        phoneNumber = number;
+                      });
+                    },
+                    initialValue: phoneNumber,
+                    textFieldController: phoneController,
+                    formatInput: false,
+                    inputDecoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: "Phone Number",
+                      hintStyle: TextStyle(color: secondaryTextColor),
+                      contentPadding: EdgeInsets.symmetric(vertical: 16.0),
+                    ),
+                    selectorConfig: SelectorConfig(
+                      selectorType: PhoneInputSelectorType.DIALOG,
+                      showFlags: true,
+                      setSelectorButtonAsPrefixIcon: true,
+                      trailingSpace: false,
+                    ),
+                    selectorTextStyle: TextStyle(
+                      color: primaryTextColor,
+                    ),
+                    cursorColor: buttonColor,
+                    textStyle: TextStyle(
+                      color: primaryTextColor,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
                 SizedBox(height: 20),
@@ -166,8 +187,7 @@ class _SignInPageState extends State<SignInPage> {
                   child: Text(
                     "Send Verification Code",
                     style: TextStyle(
-                      color:
-                          primaryTextColor, // Matches the phone number text color
+                      color: primaryTextColor,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(

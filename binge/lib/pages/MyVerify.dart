@@ -14,6 +14,7 @@ class MyVerify extends StatefulWidget {
 class _MyVerifyState extends State<MyVerify> {
   String _verificationId = '';
   final TextEditingController otpController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -22,6 +23,10 @@ class _MyVerifyState extends State<MyVerify> {
   }
 
   void _verifyPhoneNumber() async {
+    setState(() {
+      _isLoading = true; // Start loading
+    });
+
     await FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: widget.phoneNumber,
       verificationCompleted: (PhoneAuthCredential credential) async {
@@ -29,6 +34,9 @@ class _MyVerifyState extends State<MyVerify> {
       },
       verificationFailed: (FirebaseAuthException e) {
         print('Verification failed: ${e.message}');
+        setState(() {
+          _isLoading = false; // Stop loading on failure
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Verification failed. Please try again.')),
         );
@@ -36,11 +44,13 @@ class _MyVerifyState extends State<MyVerify> {
       codeSent: (String verificationId, int? resendToken) {
         setState(() {
           _verificationId = verificationId;
+          _isLoading = false; // Stop loading after code is sent
         });
       },
       codeAutoRetrievalTimeout: (String verificationId) {
         setState(() {
           _verificationId = verificationId;
+          _isLoading = false; // Stop loading on timeout
         });
       },
     );
@@ -53,6 +63,10 @@ class _MyVerifyState extends State<MyVerify> {
       return;
     }
 
+    setState(() {
+      _isLoading = true; // Start loading on code verification
+    });
+
     PhoneAuthCredential credential = PhoneAuthProvider.credential(
       verificationId: _verificationId,
       smsCode: otp,
@@ -62,6 +76,9 @@ class _MyVerifyState extends State<MyVerify> {
       await _signInWithCredential(credential);
     } catch (e) {
       print('Error verifying code: ${e.toString()}');
+      setState(() {
+        _isLoading = false; // Stop loading on error
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Invalid code. Please try again.')),
       );
@@ -81,6 +98,9 @@ class _MyVerifyState extends State<MyVerify> {
       }
     } catch (e) {
       print('Error signing in with credential: ${e.toString()}');
+      setState(() {
+        _isLoading = false; // Stop loading on sign-in error
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Sign-in failed. Please try again.')),
       );
@@ -179,17 +199,26 @@ class _MyVerifyState extends State<MyVerify> {
                   defaultPinTheme: defaultPinTheme,
                   focusedPinTheme: focusedPinTheme,
                   submittedPinTheme: submittedPinTheme,
-                  onCompleted: (pin) => print(pin),
+                  onCompleted: (pin) => _verifyCode(),
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: _verifyCode,
-                  child: Text(
-                    "Verify Phone Number",
-                    style: TextStyle(
-                      color: primaryTextColor,
-                    ),
-                  ),
+                  onPressed: _isLoading ? null : _verifyCode,
+                  child: _isLoading
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Text(
+                          "Verify Phone Number",
+                          style: TextStyle(
+                            color: primaryTextColor,
+                          ),
+                        ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
                     padding: EdgeInsets.symmetric(vertical: 16.0),
