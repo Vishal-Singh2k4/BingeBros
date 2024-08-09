@@ -4,7 +4,10 @@ import 'package:binge/pages/SplashScreen.dart';
 import 'package:binge/pages/OnboardingPage.dart';
 import 'package:binge/pages/SignInPage.dart';
 import 'package:binge/pages/UsernameSetupPage.dart';
-import 'package:binge/pages/MyVerify.dart'; // Add this import
+import 'package:binge/pages/MyVerify.dart';
+import 'package:binge/pages/SwiperPage.dart';   // Ensure this import is correct
+import 'package:binge/pages/LikedPage.dart';    // Ensure this import is correct
+import 'package:binge/pages/SettingsPage.dart'; // Updated to import SettingsPage
 
 class Routes {
   static const String home = '/home';
@@ -13,7 +16,10 @@ class Routes {
   static const String splash = '/splash';
   static const String onboarding = '/onboarding';
   static const String usernameSetup = '/usernameSetup';
-  static const String verify = '/verify'; // Add this route
+  static const String verify = '/verify';
+  static const String swiper = '/swiper';
+  static const String liked = '/liked';
+  static const String settings = '/settings';  // Updated to settings
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -31,6 +37,12 @@ class Routes {
         final String phoneNumber = settings.arguments as String;
         return MaterialPageRoute(
             builder: (_) => MyVerify(phoneNumber: phoneNumber));
+      case swiper:
+        return MaterialPageRoute(builder: (_) => SwiperPage());
+      case liked:
+        return MaterialPageRoute(builder: (_) => LikedPage());
+      case Routes.settings:  // Use the correct constant expression
+        return MaterialPageRoute(builder: (_) => SettingsPage()); // Ensure SettingsPage is imported correctly
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
