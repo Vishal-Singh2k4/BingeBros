@@ -57,79 +57,179 @@ class _SignInPageState extends State<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode =
+        MediaQuery.of(context).platformBrightness == Brightness.dark;
+
+    final Color primaryTextColor = isDarkMode ? Colors.white : Colors.black;
+    final Color secondaryTextColor =
+        isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
+    final Color buttonColor = Color(0xFF9166FF);
+
+    final Gradient backgroundGradient = isDarkMode
+        ? LinearGradient(
+            colors: [
+              Colors.black,
+              buttonColor
+            ], // Dark mode: black to primary color
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : LinearGradient(
+            colors: [
+              Colors.white,
+              buttonColor
+            ], // Light mode: white to primary color
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          );
+
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text('Sign In'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: 20),
-            Container(
-              height: 55,
-              decoration: BoxDecoration(
-                border: Border.all(width: 1, color: Colors.grey),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(width: 10),
-                  SizedBox(
-                    width: 40,
-                    child: TextField(
-                      controller: countryController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                      ),
-                    ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: backgroundGradient,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: 20),
+                Text(
+                  "Welcome Back!",
+                  style: TextStyle(
+                    color: primaryTextColor,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Text(
-                    "|",
-                    style: TextStyle(fontSize: 33, color: Colors.grey),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: "Phone",
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _sendPhoneNumberVerification,
-              child: Text("Send Verification Code"),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _googleSignInFunction,
-              icon: Image.asset(
-                'assets/google_logo.png',
-                height: 24.0,
-                width: 24.0,
-              ),
-              label: Text('Sign in with Google'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                minimumSize: Size(200, 50),
-                side: BorderSide(color: Colors.grey),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+                  textAlign: TextAlign.center,
                 ),
-              ),
+                SizedBox(height: 10),
+                Text(
+                  "Sign in to continue",
+                  style: TextStyle(
+                    color: secondaryTextColor,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 40),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.0),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Color(0xFF1E1E1E) : Color(0xFFF5F5F5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color:
+                            isDarkMode ? Color(0xFF282828) : Colors.grey[300]!),
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 50,
+                        child: TextField(
+                          controller: countryController,
+                          keyboardType: TextInputType.number,
+                          style: TextStyle(color: primaryTextColor),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: "+91",
+                            hintStyle: TextStyle(color: secondaryTextColor),
+                          ),
+                        ),
+                      ),
+                      VerticalDivider(
+                        color:
+                            isDarkMode ? Color(0xFF282828) : Colors.grey[300]!,
+                        thickness: 1,
+                        width: 20,
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+                          style: TextStyle(color: primaryTextColor),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: "Phone Number",
+                            hintStyle: TextStyle(color: secondaryTextColor),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _sendPhoneNumberVerification,
+                  child: Text(
+                    "Send Verification Code",
+                    style: TextStyle(
+                      color:
+                          primaryTextColor, // Matches the phone number text color
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: buttonColor,
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 30),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Divider(
+                        color: secondaryTextColor,
+                        thickness: 1,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        "or sign in with",
+                        style: TextStyle(
+                          color: secondaryTextColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Divider(
+                        color: secondaryTextColor,
+                        thickness: 1,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: _googleSignInFunction,
+                  icon: Image.asset(
+                    'assets/google_logo.png',
+                    height: 24.0,
+                    width: 24.0,
+                  ),
+                  label: Text('Sign in with Google'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    side: BorderSide(
+                        color:
+                            isDarkMode ? Color(0xFF282828) : Colors.grey[300]!),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

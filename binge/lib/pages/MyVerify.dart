@@ -89,100 +89,129 @@ class _MyVerifyState extends State<MyVerify> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode =
+        MediaQuery.of(context).platformBrightness == Brightness.dark;
+
+    final Color primaryTextColor = isDarkMode ? Colors.white : Colors.black;
+    final Color secondaryTextColor =
+        isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
+    final Color buttonColor = Color(0xFF9166FF);
+
+    final Gradient backgroundGradient = isDarkMode
+        ? LinearGradient(
+            colors: [Colors.black, buttonColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : LinearGradient(
+            colors: [Colors.white, buttonColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          );
+
     final defaultPinTheme = PinTheme(
       width: 56,
       height: 56,
       textStyle: TextStyle(
         fontSize: 20,
-        color: Color.fromRGBO(30, 60, 87, 1),
+        color: primaryTextColor,
         fontWeight: FontWeight.w600,
       ),
       decoration: BoxDecoration(
-        border: Border.all(color: Color.fromRGBO(234, 239, 243, 1)),
+        border: Border.all(
+            color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!),
         borderRadius: BorderRadius.circular(20),
+        color: isDarkMode ? Color(0xFF1E1E1E) : Color(0xFFF5F5F5),
       ),
     );
 
-    final focusedPinTheme = defaultPinTheme.copyDecorationWith(
-      border: Border.all(color: Color.fromRGBO(114, 178, 238, 1)),
-      borderRadius: BorderRadius.circular(8),
+    final focusedPinTheme = defaultPinTheme.copyWith(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.blue),
+        borderRadius: BorderRadius.circular(8),
+        color: isDarkMode ? Color(0xFF1E1E1E) : Color(0xFFF5F5F5),
+      ),
     );
 
     final submittedPinTheme = defaultPinTheme.copyWith(
-      decoration: defaultPinTheme.decoration?.copyWith(
-        color: Color.fromRGBO(234, 239, 243, 1),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Color(0xFF1E1E1E) : Color(0xFFF5F5F5),
       ),
     );
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: Icon(
-            Icons.arrow_back_ios_rounded,
-            color: Colors.black,
-          ),
-        ),
-        elevation: 0,
-      ),
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       body: Container(
-        margin: EdgeInsets.only(left: 25, right: 25),
-        alignment: Alignment.center,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(height: 25),
-              Text(
-                "Phone Verification",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              Text(
-                "We need to register your phone before getting started!",
-                style: TextStyle(fontSize: 16),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 30),
-              Pinput(
-                length: 6,
-                controller: otpController,
-                showCursor: true,
-                onCompleted: (pin) => print(pin),
-              ),
-              SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 45,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade600,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+        decoration: BoxDecoration(
+          gradient: backgroundGradient,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: 20),
+                Text(
+                  "Phone Verification",
+                  style: TextStyle(
+                    color: primaryTextColor,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
-                  onPressed: _verifyCode,
-                  child: Text("Verify Phone Number"),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text(
-                      "Edit Phone Number?",
-                      style: TextStyle(color: Colors.black),
+                SizedBox(height: 10),
+                Text(
+                  "We need to register your phone before getting started!",
+                  style: TextStyle(
+                    color: secondaryTextColor,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 40),
+                Pinput(
+                  length: 6,
+                  controller: otpController,
+                  showCursor: true,
+                  defaultPinTheme: defaultPinTheme,
+                  focusedPinTheme: focusedPinTheme,
+                  submittedPinTheme: submittedPinTheme,
+                  onCompleted: (pin) => print(pin),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _verifyCode,
+                  child: Text(
+                    "Verify Phone Number",
+                    style: TextStyle(
+                      color: primaryTextColor,
                     ),
                   ),
-                ],
-              ),
-            ],
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: buttonColor,
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 30),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    "Edit Phone Number?",
+                    style: TextStyle(
+                      color: primaryTextColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
