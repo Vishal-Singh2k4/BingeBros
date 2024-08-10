@@ -13,137 +13,219 @@ class _SettingsPageState extends State<SettingsPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   bool _isEditingUsername = false;
+  String _originalUsername = '';
   TextEditingController _usernameController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    _loadUsername();
+  }
+
+  void _loadUsername() async {
     User? user = _auth.currentUser;
+    if (user != null) {
+      DocumentSnapshot snapshot =
+          await _firestore.collection('users').doc(user.uid).get();
+      var userData = snapshot.data() as Map<String, dynamic>;
+      _originalUsername = userData['username'] ?? user.email;
+      _usernameController.text = _originalUsername;
+      setState(() {}); // Ensure the UI is updated after loading the username
+    }
+  }
+
+  void _toggleEditMode() {
+    setState(() {
+      if (_isEditingUsername) {
+        // Save the new username
+        _saveUsername();
+      } else {
+        _isEditingUsername = true;
+      }
+    });
+  }
+
+  void _saveUsername() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection('users').doc(user.uid).update({
+        'username': _usernameController.text.trim(),
+      }).then((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Username updated successfully!',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }).catchError((error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error updating username. Please try again.',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      });
+    }
+    setState(() {
+      _isEditingUsername = false; // Exit edit mode after saving
+    });
+  }
+
+  void _cancelEdit() {
+    setState(() {
+      _usernameController.text =
+          _originalUsername; // Revert to original username
+      _isEditingUsername = false; // Exit edit mode
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isDarkMode =
+        MediaQuery.of(context).platformBrightness == Brightness.dark;
+
+    final Color primaryTextColor = isDarkMode ? Colors.white : Colors.black;
+    final Color secondaryTextColor =
+        isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
+    final Color buttonColor = Color(0xFF9166FF);
+
+    final Gradient backgroundGradient = isDarkMode
+        ? LinearGradient(
+            colors: [Colors.black, buttonColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : LinearGradient(
+            colors: [Colors.white, buttonColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          );
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text('Settings Page'),
-      ),
-      body: Center(
-        child: user != null
-            ? FutureBuilder<DocumentSnapshot>(
-                future: _firestore.collection('users').doc(user.uid).get(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  }
-                  if (snapshot.hasError) {
-                    return Text('Error fetching user data.');
-                  }
-                  if (!snapshot.hasData || !snapshot.data!.exists) {
-                    return Text('No user data available.');
-                  }
-                  var userData = snapshot.data!.data() as Map<String, dynamic>;
-                  _usernameController.text = userData['username'] ?? user.email;
-
-                  return Column(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: backgroundGradient,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 16.0),
-                        child: Row(
-                          children: [
-                            Expanded(
+                      SizedBox(height: 20),
+                      Text(
+                        "Settings",
+                        style: TextStyle(
+                          color: primaryTextColor,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 40),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12.0),
+                              decoration: BoxDecoration(
+                                color: isDarkMode
+                                    ? Color(0xFF1E1E1E)
+                                    : Color(0xFFF5F5F5),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isDarkMode
+                                      ? Color(0xFF282828)
+                                      : Colors.grey[300]!,
+                                ),
+                              ),
                               child: TextField(
                                 controller: _usernameController,
-                                // decoration:
-                                //     InputDecoration(labelText: 'Username'),
                                 enabled: _isEditingUsername,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: "Username",
+                                  hintStyle:
+                                      TextStyle(color: secondaryTextColor),
+                                  contentPadding:
+                                      EdgeInsets.symmetric(vertical: 16.0),
+                                ),
+                                style: TextStyle(
+                                  color: primaryTextColor,
+                                  fontSize: 16,
+                                ),
                               ),
                             ),
+                          ),
+                          if (_isEditingUsername)
                             IconButton(
-                              icon: Icon(_isEditingUsername
-                                  ? Icons.check
-                                  : Icons.edit),
-                              onPressed: () {
-                                setState(() {
-                                  _isEditingUsername = !_isEditingUsername;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (_isEditingUsername) ...[
-                        SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () async {
-                                try {
-                                  await _firestore
-                                      .collection('users')
-                                      .doc(user.uid)
-                                      .update({
-                                    'username':
-                                        _usernameController.text.trim(),
-                                  });
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'Username updated successfully!'),
-                                    ),
-                                  );
-                                  setState(() {
-                                    _isEditingUsername = false;
-                                  });
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'Error updating username. Please try again.'),
-                                    ),
-                                  );
-                                }
-                              },
-                              child: Text('Update Username'),
-                            ),
-                            SizedBox(width: 10),
-                            ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isEditingUsername = false;
-                                  _usernameController.text =
-                                      userData['username'] ??
-                                          user.email; // Reset to original value
-                                });
-                              },
-                              child: Text('Cancel'),
-                              // style: ElevatedButton.styleFrom(
-                              //     backgroundColor: Color.fromARGB(255, 74, 143, 204)),
-                            ),
-                          ],
-                        ),
-                      ],
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () async {
-                          try {
-                            await _auth.signOut();
-                            Navigator.pushReplacementNamed(
-                                context, Routes.splash);
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Error signing out. Please try again.'),
+                              icon: Icon(
+                                Icons.cancel,
+                                color: buttonColor,
                               ),
-                            );
-                          }
-                        },
-                        child: Text('Logout'),
+                              onPressed: _cancelEdit,
+                            ),
+                          IconButton(
+                            icon: Icon(
+                              _isEditingUsername ? Icons.check : Icons.edit,
+                              color: buttonColor,
+                            ),
+                            onPressed: _toggleEditMode,
+                          ),
+                        ],
                       ),
+                      if (_isEditingUsername) SizedBox(height: 20),
                     ],
-                  );
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  try {
+                    await _auth.signOut();
+                    Navigator.pushReplacementNamed(context, Routes.splash);
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Error signing out. Please try again.',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 },
-              )
-            : Text('No user is signed in'),
+                icon: Icon(Icons.logout, color: primaryTextColor),
+                label: Text(
+                  'Logout',
+                  style: TextStyle(color: primaryTextColor),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: buttonColor,
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

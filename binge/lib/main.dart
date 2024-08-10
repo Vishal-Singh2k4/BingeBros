@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: Routes.onboarding, // Set SplashScreen as initial route
+      initialRoute: Routes.splash, // Set SplashScreen as initial route
       onGenerateRoute: Routes.generateRoute,
       debugShowCheckedModeBanner: false,
     );
