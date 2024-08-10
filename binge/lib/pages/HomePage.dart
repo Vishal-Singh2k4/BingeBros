@@ -37,42 +37,36 @@ class _HomePageState extends State<HomePage> {
         index: _selectedIndex,
         children: _pages,
       ),
-      bottomNavigationBar: ClipRRect(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
-        ),
-        child: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: '', // Remove text label
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.play_circle_fill),
-              label: '', // Remove text label
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite),
-              label: '', // Remove text label
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings), // Updated icon to settings
-              label: '', // Remove text label
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          selectedItemColor: Colors.purpleAccent, // Highlighted item color
-          unselectedItemColor: Colors.grey, // Non-highlighted item color
-          backgroundColor: Colors.black, // Black background color
-          onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed,
-          selectedIconTheme: IconThemeData(size: 35), // Increase icon size for selected
-          unselectedIconTheme: IconThemeData(size: 30), // Slightly larger for unselected
-          elevation: 16,  // Elevated to give depth
-          showSelectedLabels: false,  // Ensure labels are hidden
-          showUnselectedLabels: false,
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: '', // Remove text label
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.play_circle_fill),
+            label: '', // Remove text label
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite),
+            label: '', // Remove text label
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings), // Updated icon to settings
+            label: '', // Remove text label
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.purpleAccent, // Highlighted item color
+        unselectedItemColor: Colors.grey, // Non-highlighted item color
+        backgroundColor: Colors.black, // Black background color
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        selectedIconTheme: IconThemeData(size: 35), // Increase icon size for selected
+        unselectedIconTheme: IconThemeData(size: 30), // Slightly larger for unselected
+        elevation: 16,  // Elevated to give depth
+        showSelectedLabels: false,  // Ensure labels are hidden
+        showUnselectedLabels: false,
       ),
     );
   }
