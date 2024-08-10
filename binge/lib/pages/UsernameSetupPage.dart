@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:binge/routes/routes.dart';
+import 'avatar.dart'; // Import the AvatarSelectionModal
 
 class UsernameSetupPage extends StatefulWidget {
   @override
@@ -14,6 +15,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String errorMessage = '';
   bool isLoading = false;
+  String selectedAvatar = 'assets/avatar1.png'; // Default avatar
 
   Future<void> saveUsername() async {
     setState(() {
@@ -34,10 +36,10 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
       if (user != null) {
         await _firestore.collection('users').doc(user.uid).set({
           'username': usernameController.text,
+          'avatar': selectedAvatar,
         }, SetOptions(merge: true));
 
-        Navigator.pushReplacementNamed(
-            context, Routes.home); // Use route from Routes class
+        Navigator.pushReplacementNamed(context, Routes.home);
       }
     } catch (e) {
       setState(() {
@@ -49,6 +51,22 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
         isLoading = false;
       });
     }
+  }
+
+  void _openAvatarSelectionModal() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AvatarSelectionModal(
+          selectedAvatar: selectedAvatar,
+          onAvatarSelected: (avatar) {
+            setState(() {
+              selectedAvatar = avatar;
+            });
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -63,18 +81,12 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
 
     final Gradient backgroundGradient = isDarkMode
         ? LinearGradient(
-            colors: [
-              Colors.black,
-              buttonColor
-            ], // Dark mode: black to primary color
+            colors: [Colors.black, buttonColor],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           )
         : LinearGradient(
-            colors: [
-              Colors.white,
-              buttonColor
-            ], // Light mode: white to primary color
+            colors: [Colors.white, buttonColor],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           );
@@ -91,9 +103,8 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(height: 20),
                 Text(
-                  "Set Username",
+                  "Complete Your Profile",
                   style: TextStyle(
                     color: primaryTextColor,
                     fontSize: 24,
@@ -101,14 +112,21 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 10),
-                Text(
-                  "Please enter a username to continue.",
-                  style: TextStyle(
-                    color: secondaryTextColor,
-                    fontSize: 16,
+                SizedBox(height: 20),
+                GestureDetector(
+                  onTap: _openAvatarSelectionModal,
+                  child: CircleAvatar(
+                    radius: 70, // Increased size
+                    backgroundColor: Colors.transparent,
+                    child: ClipOval(
+                      child: Image.asset(
+                        selectedAvatar,
+                        fit: BoxFit.cover,
+                        height: 140,
+                        width: 140,
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 40),
                 Container(
@@ -142,7 +160,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                           color: primaryTextColor,
                         )
                       : Text(
-                          "Save Username",
+                          "Save",
                           style: TextStyle(
                             color: primaryTextColor,
                           ),
@@ -160,6 +178,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                   Text(
                     errorMessage,
                     style: TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
                   ),
               ],
             ),
