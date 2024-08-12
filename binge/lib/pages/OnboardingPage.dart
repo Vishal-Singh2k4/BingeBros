@@ -1,122 +1,107 @@
 import 'package:flutter/material.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:binge/routes/routes.dart';
+import 'package:lottie/lottie.dart';
 
-class OnboardingPage extends StatefulWidget {
-  @override
-  _OnboardingPageState createState() => _OnboardingPageState();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool isOnboardingComplete = prefs.getBool('onboarding_complete') ?? false;
+
+  runApp(BingeBrosApp(isOnboardingComplete: isOnboardingComplete));
 }
 
-class _OnboardingPageState extends State<OnboardingPage> {
-  int _currentIndex = 0;
+class BingeBrosApp extends StatelessWidget {
+  final bool isOnboardingComplete;
 
-  final List<OnboardPageModel> pages = [
-    OnboardPageModel(
-      title: "Welcome to BingeBros",
-      description: "Your ultimate entertainment hub for movies, games, books, and anime. Explore it all in one place.",
-    ),
-    OnboardPageModel(
-      title: "Discover Movies",
-      description: "Browse through a vast collection of movies, from classics to the latest blockbusters.",
-    ),
-    OnboardPageModel(
-      title: "Level Up with Games",
-      description: "Immerse yourself in a world of gaming. Find your next favorite game here.",
-    ),
-    OnboardPageModel(
-      title: "Dive into Books",
-      description: "From fiction to non-fiction, explore a library of books tailored to your interests.",
-    ),
-    OnboardPageModel(
-      title: "Anime for All",
-      description: "Whether you're a seasoned otaku or new to anime, we've got something for everyone.",
-    ),
-  ];
+  BingeBrosApp({required this.isOnboardingComplete});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text('Onboarding'),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: CarouselSlider.builder(
-              itemCount: pages.length,
-              itemBuilder: (context, index, realIndex) {
-                final page = pages[index];
-                return Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              page.title,
-                              style: TextStyle(
-                                fontSize: 28.0,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 16.0),
-                            Text(
-                              page.description,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16.0),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              options: CarouselOptions(
-                height: 500.0,
-                viewportFraction: 1.0,
-                onPageChanged: (index, reason) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
-                enableInfiniteScroll: false, // Disable infinite scrolling
-              ),
-            ),
-          ),
-          if (_currentIndex == pages.length - 1)
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0, bottom: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: () async {
-                      SharedPreferences prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool('onboardingCompleted', true);
-                      Navigator.pushReplacementNamed(context, Routes.signIn);
-                    },
-                    child: Text('Get Started'),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
+    return MaterialApp(
+      initialRoute: isOnboardingComplete ? '/main' : '/onboarding',
+      routes: {
+        '/onboarding': (context) => OnboardingScreen(),
+        '/main': (context) => MainScreen(),
+      },
     );
   }
 }
 
-class OnboardPageModel {
-  final String title;
-  final String description;
+class OnboardingScreen extends StatelessWidget {
+  final PageController _controller = PageController();
 
-  OnboardPageModel({
-    required this.title,
-    required this.description,
-  });
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: PageView(
+        controller: _controller,
+        children: [
+          buildOnboardingPage(
+            context,
+            'Gaming',
+            'Get personalized game recommendations.',
+            'assets/gaming_animation.json',
+          ),
+          buildOnboardingPage(
+            context,
+            'Anime',
+            'Find the best anime for you.',
+            'assets/anime_animation.json',
+          ),
+          buildOnboardingPage(
+            context,
+            'Books',
+            'Discover books you\'ll love.',
+            'assets/books_animation.json',
+          ),
+          buildOnboardingPage(
+            context,
+            'Get Started',
+            'Join BingeBros now!',
+            'assets/heart_animation.json',
+            isLast: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildOnboardingPage(BuildContext context, String title, String description, String animationPath, {bool isLast = false}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Lottie.asset(animationPath, height: 300),
+        SizedBox(height: 20),
+        Text(title, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        SizedBox(height: 10),
+        Text(description, textAlign: TextAlign.center, style: TextStyle(fontSize: 16)),
+        SizedBox(height: 40),
+        if (isLast)
+          ElevatedButton(
+            onPressed: () async {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              await prefs.setBool('onboarding_complete', true);
+
+              // Navigate to main screen
+              Navigator.of(context).pushReplacementNamed('/main');
+            },
+            child: Text('Get Started'),
+          ),
+      ],
+    );
+  }
+}
+
+class MainScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('BingeBros'),
+      ),
+      body: Center(
+        child: Text('Welcome to BingeBros!'),
+      ),
+    );
+  }
 }
