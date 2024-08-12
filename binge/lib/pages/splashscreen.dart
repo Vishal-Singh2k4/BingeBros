@@ -26,16 +26,14 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkStatus() async {
-    final authProvider =
-        Provider.of<custom_auth.AuthProvider>(context, listen: false);
-
     // Check Firebase Auth state
     User? user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
       // Check if username exists in Firestore
       final firestore = FirebaseFirestore.instance;
-      DocumentSnapshot userDoc = await firestore.collection('users').doc(user.uid).get();
+      DocumentSnapshot userDoc =
+          await firestore.collection('users').doc(user.uid).get();
 
       if (userDoc.exists) {
         var userData = userDoc.data() as Map<String, dynamic>;

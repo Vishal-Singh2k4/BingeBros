@@ -15,12 +15,21 @@ class _SignInPageState extends State<SignInPage> {
   final TextEditingController phoneController = TextEditingController();
   PhoneNumber phoneNumber = PhoneNumber(isoCode: 'IN'); // Default country code
 
+  bool _isLoading = false;
+
   Future<void> _googleSignInFunction() async {
+    setState(() {
+      _isLoading = true; // Start loading
+    });
+
     try {
       await _googleSignIn.signOut();
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
+        setState(() {
+          _isLoading = false; // Stop loading
+        });
         return;
       }
 
@@ -44,6 +53,10 @@ class _SignInPageState extends State<SignInPage> {
       }
     } catch (e) {
       print(e.toString());
+    } finally {
+      setState(() {
+        _isLoading = false; // Stop loading
+      });
     }
   }
 
@@ -110,147 +123,163 @@ class _SignInPageState extends State<SignInPage> {
           );
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: backgroundGradient,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(height: 20),
-                Text(
-                  "Welcome Back!",
-                  style: TextStyle(
-                    color: primaryTextColor,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 10),
-                Text(
-                  "Sign in to continue",
-                  style: TextStyle(
-                    color: secondaryTextColor,
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 40),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.0),
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? Color(0xFF1E1E1E) : Color(0xFFF5F5F5),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color:
-                            isDarkMode ? Color(0xFF282828) : Colors.grey[300]!),
-                  ),
-                  child: InternationalPhoneNumberInput(
-                    onInputChanged: (PhoneNumber number) {
-                      setState(() {
-                        phoneNumber = number;
-                      });
-                    },
-                    initialValue: phoneNumber,
-                    textFieldController: phoneController,
-                    formatInput: false,
-                    inputDecoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: "Phone Number",
-                      hintStyle: TextStyle(color: secondaryTextColor),
-                      contentPadding: EdgeInsets.symmetric(vertical: 16.0),
-                    ),
-                    selectorConfig: SelectorConfig(
-                      selectorType: PhoneInputSelectorType.DIALOG,
-                      showFlags: true,
-                      setSelectorButtonAsPrefixIcon: true,
-                      trailingSpace: false,
-                    ),
-                    selectorTextStyle: TextStyle(
-                      color: primaryTextColor,
-                    ),
-                    cursorColor: buttonColor,
-                    textStyle: TextStyle(
-                      color: primaryTextColor,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _sendPhoneNumberVerification,
-                  child: Text(
-                    "Send Verification Code",
-                    style: TextStyle(
-                      color: primaryTextColor,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonColor,
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 30),
-                Row(
+      body: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: backgroundGradient,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: Divider(
-                        color: secondaryTextColor,
-                        thickness: 1,
+                    SizedBox(height: 20),
+                    Text(
+                      "Welcome Back!",
+                      style: TextStyle(
+                        color: primaryTextColor,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
                       ),
+                      textAlign: TextAlign.center,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        "or sign in with",
-                        style: TextStyle(
-                          color: secondaryTextColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                    SizedBox(height: 10),
+                    Text(
+                      "Sign in to continue",
+                      style: TextStyle(
+                        color: secondaryTextColor,
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 40),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12.0),
+                      decoration: BoxDecoration(
+                        color:
+                            isDarkMode ? Color(0xFF1E1E1E) : Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: isDarkMode
+                                ? Color(0xFF282828)
+                                : Colors.grey[300]!),
+                      ),
+                      child: InternationalPhoneNumberInput(
+                        onInputChanged: (PhoneNumber number) {
+                          setState(() {
+                            phoneNumber = number;
+                          });
+                        },
+                        initialValue: phoneNumber,
+                        textFieldController: phoneController,
+                        formatInput: false,
+                        inputDecoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: "Phone Number",
+                          hintStyle: TextStyle(color: secondaryTextColor),
+                          contentPadding: EdgeInsets.symmetric(vertical: 16.0),
+                        ),
+                        selectorConfig: SelectorConfig(
+                          selectorType: PhoneInputSelectorType.DIALOG,
+                          showFlags: true,
+                          setSelectorButtonAsPrefixIcon: true,
+                          trailingSpace: false,
+                        ),
+                        selectorTextStyle: TextStyle(
+                          color: primaryTextColor,
+                        ),
+                        cursorColor: buttonColor,
+                        textStyle: TextStyle(
+                          color: primaryTextColor,
+                          fontSize: 16,
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: Divider(
-                        color: secondaryTextColor,
-                        thickness: 1,
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _sendPhoneNumberVerification,
+                      child: Text(
+                        "Send Verification Code",
+                        style: TextStyle(
+                          color: primaryTextColor,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: buttonColor,
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 30),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: secondaryTextColor,
+                            thickness: 1,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text(
+                            "or sign in with",
+                            style: TextStyle(
+                              color: secondaryTextColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: secondaryTextColor,
+                            thickness: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: _googleSignInFunction,
+                      icon: Image.asset(
+                        'assets/google_logo.png',
+                        height: 24.0,
+                        width: 24.0,
+                      ),
+                      label: Text('Sign in with Google'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        side: BorderSide(
+                            color: isDarkMode
+                                ? Color(0xFF282828)
+                                : Colors.grey[300]!),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: _googleSignInFunction,
-                  icon: Image.asset(
-                    'assets/google_logo.png',
-                    height: 24.0,
-                    width: 24.0,
-                  ),
-                  label: Text('Sign in with Google'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                    side: BorderSide(
-                        color:
-                            isDarkMode ? Color(0xFF282828) : Colors.grey[300]!),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(buttonColor),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
