@@ -14,6 +14,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _showLoader = false; // State to manage showing the loader
+
   @override
   void initState() {
     super.initState();
@@ -22,6 +24,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _startDelay() async {
     await Future.delayed(Duration(milliseconds: 3500));
+    setState(() {
+      _showLoader = true; // Show loader after animation
+    });
     _checkStatus();
   }
 
@@ -73,12 +78,14 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       body: Center(
-        child: Lottie.asset(
-          'assets/Wa5v8hxVSb.json',
-          width: 200,
-          height: 200,
-          fit: BoxFit.fill,
-        ),
+        child: _showLoader
+            ? CircularProgressIndicator() // Show loader if animation has completed
+            : Lottie.asset(
+                'assets/Wa5v8hxVSb.json',
+                width: 200,
+                height: 200,
+                fit: BoxFit.fill,
+              ),
       ),
     );
   }

@@ -23,10 +23,10 @@ class _AvatarSelectionModalState extends State<AvatarSelectionModal> {
   }
 
   final List<String> avatars = [
-    'assets/avatar1.png',
+    'assets/avatar4.png',
     'assets/avatar2.png',
     'assets/avatar3.png',
-    'assets/avatar4.png',
+    'assets/avatar1.png',
     'assets/avatar5.png',
     'assets/avatar6.png',
     'assets/avatar7.png',

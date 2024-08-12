@@ -15,7 +15,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String errorMessage = '';
   bool isLoading = false;
-  String selectedAvatar = 'assets/avatar1.png'; // Default avatar
+  String selectedAvatar = 'assets/avatar4.png'; // Default avatar
 
   Future<void> saveUsername() async {
     setState(() {
@@ -91,96 +91,112 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
             end: Alignment.bottomRight,
           );
 
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: backgroundGradient,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  "Complete Your Profile",
-                  style: TextStyle(
-                    color: primaryTextColor,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+    return WillPopScope(
+      onWillPop: () async {
+        // Prevent back navigation
+        return false;
+      },
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: backgroundGradient,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    "Complete Your Profile",
+                    style: TextStyle(
+                      color: primaryTextColor,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 20),
-                GestureDetector(
-                  onTap: _openAvatarSelectionModal,
-                  child: CircleAvatar(
-                    radius: 70, // Increased size
-                    backgroundColor: Colors.transparent,
-                    child: ClipOval(
-                      child: Image.asset(
-                        selectedAvatar,
-                        fit: BoxFit.cover,
-                        height: 140,
-                        width: 140,
+                  SizedBox(height: 20),
+                  GestureDetector(
+                    onTap: _openAvatarSelectionModal,
+                    child: CircleAvatar(
+                      radius: 70, // Increased size
+                      backgroundColor: Colors.transparent,
+                      child: ClipOval(
+                        child: Image.asset(
+                          selectedAvatar,
+                          fit: BoxFit.cover,
+                          height: 140,
+                          width: 140,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(height: 40),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.0),
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? Color(0xFF1E1E1E) : Color(0xFFF5F5F5),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color:
-                            isDarkMode ? Color(0xFF282828) : Colors.grey[300]!),
-                  ),
-                  child: TextField(
-                    controller: usernameController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: "Username",
-                      hintStyle: TextStyle(color: secondaryTextColor),
-                      contentPadding: EdgeInsets.symmetric(vertical: 16.0),
-                    ),
+                  SizedBox(height: 10), // Added space between avatar and text
+                  Text(
+                    "Tap to change avatar",
                     style: TextStyle(
                       color: primaryTextColor,
-                      fontSize: 16,
+                      fontSize: 14,
                     ),
-                  ),
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: isLoading ? null : saveUsername,
-                  child: isLoading
-                      ? CircularProgressIndicator(
-                          color: primaryTextColor,
-                        )
-                      : Text(
-                          "Save",
-                          style: TextStyle(
-                            color: primaryTextColor,
-                          ),
-                        ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonColor,
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 30),
-                if (errorMessage.isNotEmpty)
-                  Text(
-                    errorMessage,
-                    style: TextStyle(color: Colors.red),
                     textAlign: TextAlign.center,
                   ),
-              ],
+                  SizedBox(height: 40),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.0),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Color(0xFF1E1E1E) : Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: isDarkMode
+                              ? Color(0xFF282828)
+                              : Colors.grey[300]!),
+                    ),
+                    child: TextField(
+                      controller: usernameController,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: "Username",
+                        hintStyle: TextStyle(color: secondaryTextColor),
+                        contentPadding: EdgeInsets.symmetric(vertical: 16.0),
+                      ),
+                      style: TextStyle(
+                        color: primaryTextColor,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: isLoading ? null : saveUsername,
+                    child: isLoading
+                        ? CircularProgressIndicator(
+                            color: primaryTextColor,
+                          )
+                        : Text(
+                            "Save",
+                            style: TextStyle(
+                              color: primaryTextColor,
+                            ),
+                          ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: buttonColor,
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 30),
+                  if (errorMessage.isNotEmpty)
+                    Text(
+                      errorMessage,
+                      style: TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                ],
+              ),
             ),
           ),
         ),
