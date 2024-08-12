@@ -49,6 +49,9 @@ class CardPlanet extends StatelessWidget {
                 child: Lottie.asset(data.lottieAsset),
               ),
               const Spacer(flex: 1),
+              if (isLastPage)
+                SizedBox(
+                    height: 70), // Add padding above the text for the last page
               Text(
                 data.title.toUpperCase(),
                 style: TextStyle(
