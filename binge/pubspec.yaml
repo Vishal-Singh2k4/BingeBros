@@ -45,6 +45,8 @@ dependencies:
   # fluttermoji: ^1.0.2
   package_info_plus: 8.0.2
   fluttermoji: ^1.0.2
+  concentric_transition: ^1.0.3
+  
 
 dev_dependencies:
   flutter_test:
@@ -78,6 +80,12 @@ flutter:
     - assets/avatar6.png
     - assets/avatar7.png
     - assets/avatar8.png
+    - assets/anime_animation.json
+    - assets/books_animation.json
+    - assets/gaming_animation.json
+    - assets/introduction_animation.json
+    - assets/movie_animation.json
+    - assets/bg.json
     
 
   # To add assets to your application, add an assets section, like this:
