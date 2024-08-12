@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:binge/routes/routes.dart';
 
 class CardPlanetData {
   final String title;
@@ -20,13 +22,16 @@ class CardPlanetData {
     this.background,
   });
 }
+
 class CardPlanet extends StatelessWidget {
   const CardPlanet({
     required this.data,
+    required this.isLastPage,
     Key? key,
   }) : super(key: key);
 
   final CardPlanetData data;
+  final bool isLastPage;
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +73,27 @@ class CardPlanet extends StatelessWidget {
             ],
           ),
         ),
+        if (isLastPage)
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color:
+                    const Color(0xFFCCBAFA), // Background color of the circle
+              ),
+              child: IconButton(
+                icon: Icon(Icons.arrow_forward, size: 30, color: Colors.white),
+                onPressed: () async {
+                  SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                  await prefs.setBool('onboardingCompleted', true);
+                  Navigator.pushReplacementNamed(context, Routes.signIn);
+                },
+              ),
+            ),
+          ),
       ],
     );
   }
