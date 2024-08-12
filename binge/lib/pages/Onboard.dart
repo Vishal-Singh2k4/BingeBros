@@ -10,7 +10,8 @@ class OnboardingPage extends StatelessWidget {
   final data = [
     CardPlanetData(
       title: "Welcome to BingeBros!",
-      subtitle: "Your ultimate entertainment hub for movies, anime, games, and books.",
+      subtitle:
+          "Your ultimate entertainment hub for movies, anime, games, and books.",
       lottieAsset: "assets/introduction_animation.json",
       backgroundColor: const Color(0xFF9066FF),
       titleColor: Colors.pink,
@@ -28,14 +29,14 @@ class OnboardingPage extends StatelessWidget {
     ),
     CardPlanetData(
       title: "Anime",
-      subtitle: "Discover the latest and greatest anime series tailored for you.",
+      subtitle:
+          "Discover the latest and greatest anime series tailored for you.",
       lottieAsset: "assets/anime_animation.json",
       backgroundColor: const Color(0xFF9066FF),
       titleColor: Colors.yellow,
       subtitleColor: Colors.white,
       background: LottieBuilder.asset("assets/bg.json"),
     ),
-    
     CardPlanetData(
       title: "Books",
       subtitle: "Explore a world of books curated just for you.",
@@ -47,7 +48,8 @@ class OnboardingPage extends StatelessWidget {
     ),
     CardPlanetData(
       title: "Games",
-      subtitle: "Find the best games that match your gaming style and interests.",
+      subtitle:
+          "Find the best games that match your gaming style and interests.",
       lottieAsset: "assets/gaming_animation.json",
       backgroundColor: const Color(0xFF9066FF),
       titleColor: Colors.yellow,
@@ -63,7 +65,9 @@ class OnboardingPage extends StatelessWidget {
         colors: data.map((e) => e.backgroundColor).toList(),
         itemCount: data.length,
         itemBuilder: (int index) {
-          return CardPlanet(data: data[index]);
+          // Determine if the current page is the last page
+          bool isLastPage = index == data.length - 1;
+          return CardPlanet(data: data[index], isLastPage: isLastPage);
         },
         onFinish: () {
           Navigator.pushReplacement(
