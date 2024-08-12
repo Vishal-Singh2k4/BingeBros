@@ -61,16 +61,22 @@ class OnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: ConcentricPageView(
-        colors: data.map((e) => e.backgroundColor).toList(),
-        itemCount: data.length,
-        itemBuilder: (int index) {
-          return CardPlanet(
-            data: data[index],
-            isLastPage: index == data.length - 1,
-          );
-        },
+    return WillPopScope(
+      onWillPop: () async {
+        // Prevent back navigation
+        return false;
+      },
+      child: Scaffold(
+        body: ConcentricPageView(
+          colors: data.map((e) => e.backgroundColor).toList(),
+          itemCount: data.length,
+          itemBuilder: (int index) {
+            return CardPlanet(
+              data: data[index],
+              isLastPage: index == data.length - 1,
+            );
+          },
+        ),
       ),
     );
   }
