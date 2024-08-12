@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:binge/routes/routes.dart';
 import 'package:binge/providers/AuthProvider.dart'
     as custom_auth; // Alias for custom AuthProvider
+import 'package:cloud_firestore/cloud_firestore.dart'; // For Firestore
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -32,8 +33,26 @@ class _SplashScreenState extends State<SplashScreen> {
     User? user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
-      // User is logged in
-      Navigator.pushReplacementNamed(context, Routes.home);
+      // Check if username exists in Firestore
+      final firestore = FirebaseFirestore.instance;
+      DocumentSnapshot userDoc = await firestore.collection('users').doc(user.uid).get();
+
+      if (userDoc.exists) {
+        var userData = userDoc.data() as Map<String, dynamic>;
+        String? username = userData['username'];
+
+        if (username == null || username.isEmpty) {
+          // Redirect to Username Setup page
+          Navigator.pushReplacementNamed(context, Routes.usernameSetup);
+        } else {
+          // User has a username, proceed to Home page
+          Navigator.pushReplacementNamed(context, Routes.home);
+        }
+      } else {
+        // User document does not exist, handle accordingly
+        // Redirect to Username Setup page
+        Navigator.pushReplacementNamed(context, Routes.usernameSetup);
+      }
     } else {
       // User is not logged in, check onboarding status
       SharedPreferences prefs = await SharedPreferences.getInstance();
