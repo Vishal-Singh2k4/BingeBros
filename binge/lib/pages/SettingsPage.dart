@@ -16,21 +16,24 @@ class _SettingsPageState extends State<SettingsPage> {
   String _originalUsername = '';
   TextEditingController _usernameController = TextEditingController();
   String _authProvider = ''; // Variable to hold the auth provider info
-  String _authInfo = ''; // Variable to hold the auth info (phone or email)
+  String _authInfo = '';
+  String _selectedAvatar = 'assets/default_avatar.png'; // Default avatar
 
   @override
   void initState() {
     super.initState();
-    _loadUsername();
+    _loadUserProfile(); // Load both username and avatar
   }
 
-  void _loadUsername() async {
+  // Load user profile data (username, avatar, auth provider details)
+  void _loadUserProfile() async {
     User? user = _auth.currentUser;
     if (user != null) {
       DocumentSnapshot snapshot =
           await _firestore.collection('users').doc(user.uid).get();
       var userData = snapshot.data() as Map<String, dynamic>;
-      _originalUsername = userData['username'] ?? user.email;
+      _originalUsername = userData['username'] ?? user.email!;
+      _selectedAvatar = userData['avatar'] ?? _selectedAvatar;
       _usernameController.text = _originalUsername;
 
       // Determine the authentication provider and relevant info
@@ -38,41 +41,43 @@ class _SettingsPageState extends State<SettingsPage> {
         var provider = user.providerData.first.providerId;
         if (provider == 'google.com') {
           _authProvider = 'Google Account';
-          _authInfo = user.email ?? 'No email';
+          _authInfo = user.email ?? 'No email associated';
         } else if (provider == 'phone') {
           _authProvider = 'Phone Number';
-          _authInfo = user.phoneNumber ?? 'No phone number';
+          _authInfo = user.phoneNumber ?? 'No phone number associated';
         } else {
           _authProvider = 'Other';
           _authInfo = 'N/A';
         }
       }
 
-      setState(() {}); // Ensure the UI is updated after loading the username
+      setState(() {}); // Ensure the UI is updated after loading the user data
     }
   }
 
+  // Toggle between edit and view mode for the username
   void _toggleEditMode() {
     setState(() {
       if (_isEditingUsername) {
-        // Save the new username
-        _saveUsername();
+        _saveUserProfile(); // Save changes when exiting edit mode
       } else {
         _isEditingUsername = true;
       }
     });
   }
 
-  void _saveUsername() async {
+  // Save updated username and avatar to Firestore
+  void _saveUserProfile() async {
     User? user = _auth.currentUser;
     if (user != null) {
       await _firestore.collection('users').doc(user.uid).update({
         'username': _usernameController.text.trim(),
+        'avatar': _selectedAvatar,
       }).then((_) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Username updated successfully!',
+              'Profile updated successfully!',
               style: TextStyle(color: Colors.white),
             ),
             backgroundColor: Colors.green,
@@ -82,7 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Error updating username. Please try again.',
+              'Error updating profile. Please try again.',
               style: TextStyle(color: Colors.white),
             ),
             backgroundColor: Colors.red,
@@ -95,6 +100,7 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
+  // Cancel editing and revert to the original username
   void _cancelEdit() {
     setState(() {
       _usernameController.text =
@@ -103,22 +109,24 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
+  // Show confirmation dialog before account deletion
   void _showDeleteAccountDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete your account? This action cannot be undone.'),
+          title: Text('Confirm Account Deletion'),
+          content: Text(
+              'Are you sure you want to delete your account? This action cannot be undone.'),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text('Cancel', style: TextStyle(color: Colors.grey)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Delete'),
+              child: Text('Delete', style: TextStyle(color: Colors.red)),
               onPressed: () {
                 Navigator.of(context).pop();
                 _startAccountDeletion();
@@ -130,8 +138,8 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // Delay account deletion by 5 seconds with a snackbar warning
   void _startAccountDeletion() {
-    // Show a loading indicator or message
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Account deletion will start in 5 seconds.'),
@@ -140,23 +148,18 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
 
-    // Delay for 5 seconds before deleting the account
     Future.delayed(Duration(seconds: 5), () {
       _deleteAccount();
     });
   }
 
+  // Delete the account and associated Firestore data
   void _deleteAccount() async {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        // Delete Firestore document
         await _firestore.collection('users').doc(user.uid).delete();
-
-        // Delete Firebase Auth account
         await user.delete();
-
-        // Navigate to splash or login screen
         Navigator.pushReplacementNamed(context, Routes.splash);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -172,6 +175,38 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  // Show modal for avatar selection
+  void _showAvatarSelectionModal() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return GridView.count(
+          crossAxisCount: 3,
+          children: List.generate(8, (index) {
+            // Add more avatar options as needed
+            String avatarPath = 'assets/avatar${index + 1}.png';
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedAvatar = avatarPath;
+                });
+                Navigator.pop(context); // Close the modal
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: AssetImage(avatarPath),
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  // Build the widget tree for the settings page UI
   @override
   Widget build(BuildContext context) {
     final bool isDarkMode =
@@ -181,7 +216,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final Color secondaryTextColor =
         isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
     final Color buttonColor = Color(0xFF9166FF);
-    final Color subtleTextColor = isDarkMode ? Colors.grey[600]! : Colors.grey[500]!;
+    final Color subtleTextColor =
+        isDarkMode ? Colors.grey[600]! : Colors.grey[500]!;
 
     final Gradient backgroundGradient = isDarkMode
         ? LinearGradient(
@@ -202,7 +238,6 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             SizedBox(height: 40), // Space from the top
             Text(
@@ -219,90 +254,115 @@ class _SettingsPageState extends State<SettingsPage> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    _buildUsernameSection(primaryTextColor, secondaryTextColor, buttonColor),
-                    SizedBox(height: 40),
-                    _buildAuthProviderSection(subtleTextColor),
-                    SizedBox(height: 40), // Space before the logout button
-                    _buildLogoutButton(primaryTextColor, buttonColor),
-                    SizedBox(height: 20), // Space before the delete account button
-                    _buildDeleteAccountButton(primaryTextColor, buttonColor),
+                    _buildAvatarSection(
+                        primaryTextColor, buttonColor), // Avatar section
+                    SizedBox(height: 20),
+                    _buildUsernameSection(
+                        primaryTextColor, secondaryTextColor, buttonColor),
+                    Divider(height: 40, color: subtleTextColor),
+                    _buildAuthProviderSection(primaryTextColor),
                   ],
                 ),
               ),
             ),
+            SizedBox(height: 20), // Space before the buttons
+            _buildLogoutButton(primaryTextColor, buttonColor),
+            SizedBox(height: 10), // Space between buttons
+            _buildDeleteAccountButton(primaryTextColor),
+            SizedBox(height: 20), // Space from the bottom
           ],
         ),
       ),
     );
   }
 
-  Widget _buildUsernameSection(Color primaryTextColor, Color secondaryTextColor, Color buttonColor) {
-    final bool isDarkMode =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
-
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
-      decoration: BoxDecoration(
-        color: isDarkMode ? Color(0xFF1E1E1E) : Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDarkMode ? Color(0xFF282828) : Colors.grey[300]!,
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _usernameController,
-              enabled: _isEditingUsername,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: "Username",
-                hintStyle: TextStyle(color: secondaryTextColor),
-                contentPadding: EdgeInsets.symmetric(vertical: 16.0),
-              ),
-              style: TextStyle(
-                color: primaryTextColor,
-                fontSize: 16,
-              ),
-            ),
-          ),
-          if (_isEditingUsername)
-            IconButton(
-              icon: Icon(
-                Icons.cancel,
-                color: Color(0xFFB71C1C),
-              ),
-              onPressed: _cancelEdit,
-            ),
-          IconButton(
-            icon: Icon(
-              _isEditingUsername ? Icons.check : Icons.edit,
-              color: buttonColor,
-            ),
-            onPressed: _toggleEditMode,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAuthProviderSection(Color subtleTextColor) {
+  // Build the username section widget
+  Widget _buildUsernameSection(
+      Color primaryTextColor, Color secondaryTextColor, Color buttonColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Auth Provider: $_authProvider",
+          "Username",
           style: TextStyle(
-            color: subtleTextColor,
-            fontSize: 16,
+            color: secondaryTextColor,
+            fontSize: 14,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _usernameController,
+                readOnly: !_isEditingUsername,
+                style: TextStyle(
+                  color: primaryTextColor,
+                  fontSize: 18,
+                ),
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: buttonColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: buttonColor),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 10),
+            GestureDetector(
+              onTap: _toggleEditMode,
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: buttonColor,
+                child: Icon(
+                  _isEditingUsername ? Icons.check : Icons.edit,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+            if (_isEditingUsername) ...[
+              SizedBox(width: 10),
+              GestureDetector(
+                onTap: _cancelEdit,
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.red,
+                  child: Icon(
+                    Icons.cancel,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Build the avatar section widget
+  Widget _buildAvatarSection(Color primaryTextColor, Color buttonColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        GestureDetector(
+          onTap: _showAvatarSelectionModal,
+          child: CircleAvatar(
+            radius: 50,
+            backgroundImage: AssetImage(_selectedAvatar),
+            backgroundColor: Colors.grey[300],
+          ),
+        ),
+        SizedBox(height: 10),
         Text(
-          "Account info: $_authInfo",
+          "Tap to change avatar",
           style: TextStyle(
-            color: subtleTextColor,
+            color: primaryTextColor,
             fontSize: 14,
           ),
         ),
@@ -310,56 +370,125 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildLogoutButton(Color primaryTextColor, Color buttonColor) {
-    return ElevatedButton(
-      onPressed: () async {
-        try {
-          await _auth.signOut();
-          Navigator.pushReplacementNamed(context, Routes.splash);
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Error signing out. Please try again.',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: buttonColor,
-        padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
+  // Build the authentication provider section widget
+  Widget _buildAuthProviderSection(Color primaryTextColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Account Details",
+          style: TextStyle(
+            color: primaryTextColor,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-      child: Text(
-        'Logout',
-        style: TextStyle(
-          color: primaryTextColor,
-          fontSize: 16,
+        SizedBox(height: 8),
+        Row(
+          children: [
+            Icon(
+              Icons.security,
+              color: primaryTextColor,
+              size: 20,
+            ),
+            SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                "Authentication Method: $_authProvider",
+                style: TextStyle(
+                  color: primaryTextColor,
+                  fontSize: 14,
+                ),
+                overflow: TextOverflow
+                    .ellipsis, // Truncate the text with ellipsis if it overflows
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 8),
+        Row(
+          children: [
+            Icon(
+              Icons.info_outline,
+              color: primaryTextColor,
+              size: 20,
+            ),
+            SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                "Account Info: $_authInfo",
+                style: TextStyle(
+                  color: primaryTextColor,
+                  fontSize: 14,
+                ),
+                overflow: TextOverflow
+                    .ellipsis, // Truncate the text with ellipsis if it overflows
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLogoutButton(Color primaryTextColor, Color buttonColor) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () async {
+          try {
+            await _auth.signOut();
+            Navigator.pushReplacementNamed(context, Routes.splash);
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Error signing out. Please try again.',
+                  style: TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: buttonColor,
+          padding: EdgeInsets.symmetric(vertical: 16.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+        ),
+        child: Text(
+          'Logout',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDeleteAccountButton(Color primaryTextColor, Color buttonColor) {
-    return ElevatedButton(
-      onPressed: _showDeleteAccountDialog,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red,
-        padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
+  Widget _buildDeleteAccountButton(Color primaryTextColor) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _showDeleteAccountDialog,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          padding: EdgeInsets.symmetric(vertical: 16.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
         ),
-      ),
-      child: Text(
-        'Delete Account',
-        style: TextStyle(
-          color: primaryTextColor,
-          fontSize: 16,
+        child: Text(
+          'Delete Account',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );

@@ -15,7 +15,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String errorMessage = '';
   bool isLoading = false;
-  String selectedAvatar = 'assets/avatar1.png'; // Default avatar
+  String selectedAvatar = 'assets/avatar4.png'; // Default avatar
 
   Future<void> saveUsername() async {
     setState(() {
@@ -127,6 +127,15 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                       ),
                     ),
                   ),
+                ),
+                SizedBox(height: 10), // Added space between avatar and text
+                Text(
+                  "Tap to change avatar",
+                  style: TextStyle(
+                    color: primaryTextColor,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 40),
                 Container(
