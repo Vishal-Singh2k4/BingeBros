@@ -43,6 +43,7 @@ dependencies:
   intl_phone_number_input: ^0.7.4
   carousel_slider: ^5.0.0
   fluttermoji: ^1.0.2
+  concentric_transition: ^1.0.3
   
 
 dev_dependencies:
@@ -80,7 +81,9 @@ flutter:
     - assets/anime_animation.json
     - assets/books_animation.json
     - assets/gaming_animation.json
-    - assets/heart_animation.json
+    - assets/introduction_animation.json
+    - assets/movie_animation.json
+    - assets/bg.json
     
 
   # To add assets to your application, add an assets section, like this:

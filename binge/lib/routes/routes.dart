@@ -1,3 +1,4 @@
+import 'package:binge/pages/Onboard.dart';
 import 'package:binge/pages/Onboarding2.dart';
 import 'package:flutter/material.dart';
 import 'package:binge/pages/HomePage.dart';
@@ -29,7 +30,7 @@ class Routes {
       case splash:
         return MaterialPageRoute(builder: (_) => SplashScreen());
       case onboarding:
-        return MaterialPageRoute(builder: (_) => AnimatedOnboardingScreen());
+        return MaterialPageRoute(builder: (_) => OnboardingPage());
       case signIn:
         return MaterialPageRoute(builder: (_) => SignInPage());
       case usernameSetup:
