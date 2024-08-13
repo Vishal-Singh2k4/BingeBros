@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class CategoryNotifier extends ChangeNotifier {
   // Default category
-  String _selectedCategory = 'Games';
+  String _selectedCategory = 'Movies';
 
   // Getter for the selected category
   String get selectedCategory => _selectedCategory;
