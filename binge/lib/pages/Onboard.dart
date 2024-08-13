@@ -14,7 +14,7 @@ class OnboardingPage extends StatelessWidget {
           "Your ultimate entertainment hub for movies, anime, games, and books.",
       lottieAsset: "assets/introduction_animation.json",
       backgroundColor: const Color(0xFF9066FF),
-      titleColor: Colors.pink,
+      titleColor: Colors.black,
       subtitleColor: Colors.white,
       background: LottieBuilder.asset("assets/bg.json"),
     ),
@@ -68,12 +68,6 @@ class OnboardingPage extends StatelessWidget {
           // Determine if the current page is the last page
           bool isLastPage = index == data.length - 1;
           return CardPlanet(data: data[index], isLastPage: isLastPage);
-        },
-        onFinish: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
         },
       ),
     );
