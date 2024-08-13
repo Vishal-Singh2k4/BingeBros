@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:binge/routes/routes.dart';
+import 'package:binge/notifiers/category_notifier.dart';
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
   @override
@@ -142,9 +144,9 @@ class _SettingsPageState extends State<SettingsPage> {
   void _startAccountDeletion() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Account deletion will start in 5 seconds.'),
+        content: Text('Your account is being deleted.'),
         duration: Duration(seconds: 2),
-        backgroundColor: Colors.orange,
+        backgroundColor: Colors.red,
       ),
     );
 
@@ -237,40 +239,48 @@ class _SettingsPageState extends State<SettingsPage> {
           gradient: backgroundGradient,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          children: [
-            SizedBox(height: 40), // Space from the top
-            Text(
-              "Settings",
-              style: TextStyle(
-                color: primaryTextColor,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 20),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildAvatarSection(
-                        primaryTextColor, buttonColor), // Avatar section
-                    SizedBox(height: 20),
-                    _buildUsernameSection(
-                        primaryTextColor, secondaryTextColor, buttonColor),
-                    Divider(height: 40, color: subtleTextColor),
-                    _buildAuthProviderSection(primaryTextColor),
-                  ],
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(height: 40), // Space from the top
+              Text(
+                "Settings",
+                style: TextStyle(
+                  color: primaryTextColor,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
                 ),
+                textAlign: TextAlign.center,
               ),
-            ),
-            SizedBox(height: 20), // Space before the buttons
-            _buildLogoutButton(primaryTextColor, buttonColor),
-            SizedBox(height: 10), // Space between buttons
-            _buildDeleteAccountButton(primaryTextColor),
-            SizedBox(height: 20), // Space from the bottom
-          ],
+              SizedBox(height: 20),
+
+              _buildAvatarSection(
+                  primaryTextColor, buttonColor), // Avatar section
+              SizedBox(height: 20),
+
+              _buildUsernameSection(
+                  primaryTextColor, secondaryTextColor, buttonColor),
+              SizedBox(height: 20), // Space between username and dropdown
+
+              Divider(height: 40, color: subtleTextColor),
+
+              // Category dropdown section matching _buildAuthProviderSection style
+              _buildCategoryDropdown(primaryTextColor, buttonColor),
+
+              Divider(height: 40, color: subtleTextColor),
+
+              _buildAuthProviderSection(primaryTextColor),
+
+              Divider(height: 40, color: subtleTextColor),
+              SizedBox(height: 20), // Space before the buttons
+
+              _buildLogoutButton(primaryTextColor, buttonColor),
+              SizedBox(height: 10), // Space between buttons
+
+              _buildDeleteAccountButton(primaryTextColor),
+              SizedBox(height: 20), // Space from the bottom
+            ],
+          ),
         ),
       ),
     );
@@ -312,20 +322,9 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             SizedBox(width: 10),
-            GestureDetector(
-              onTap: _toggleEditMode,
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: buttonColor,
-                child: Icon(
-                  _isEditingUsername ? Icons.check : Icons.edit,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ),
+
+            // Cancel (Cross) Button when in edit mode
             if (_isEditingUsername) ...[
-              SizedBox(width: 10),
               GestureDetector(
                 onTap: _cancelEdit,
                 child: CircleAvatar(
@@ -338,7 +337,22 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
+              SizedBox(width: 10), // Space between icons
             ],
+
+            // Edit/Check (Tick) Button
+            GestureDetector(
+              onTap: _toggleEditMode,
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: buttonColor,
+                child: Icon(
+                  _isEditingUsername ? Icons.check : Icons.edit,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
           ],
         ),
       ],
@@ -366,6 +380,59 @@ class _SettingsPageState extends State<SettingsPage> {
             fontSize: 14,
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryDropdown(Color primaryTextColor, Color buttonColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header for Select Category
+        Text(
+          "Select Category:",
+          style: TextStyle(
+            color: primaryTextColor,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 8), // Space between header and dropdown
+        // Container with same width as logout button
+        SizedBox(
+          width: double.infinity, // Makes the container as wide as the parent
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.0),
+            decoration: BoxDecoration(
+              color: buttonColor, // Box background color
+              borderRadius: BorderRadius.circular(8.0), // Rounded corners
+            ),
+            child: DropdownButton<String>(
+              isExpanded: true, // Ensure dropdown takes up full width
+              value: Provider.of<CategoryNotifier>(context).selectedCategory,
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  Provider.of<CategoryNotifier>(context, listen: false)
+                      .setCategory(newValue);
+                }
+              },
+              items: <String>['Games', 'Books', 'Movies', 'Anime']
+                  .map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(
+                    value,
+                    style: TextStyle(color: primaryTextColor),
+                  ),
+                );
+              }).toList(),
+              dropdownColor: buttonColor, // Match dropdown background color
+              iconEnabledColor: primaryTextColor, // Match icon color
+              underline: SizedBox(), // Remove the underline
+            ),
+          ),
+        ),
+        SizedBox(height: 16), // Space after dropdown
       ],
     );
   }

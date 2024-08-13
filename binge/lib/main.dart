@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:binge/routes/routes.dart';
 import 'package:binge/providers/AuthProvider.dart';
+import 'package:binge/notifiers/category_notifier.dart'; // Import CategoryNotifier
 import 'package:binge/pages/SplashScreen.dart'; // Import SplashScreen
 
 void main() async {
@@ -10,8 +11,15 @@ void main() async {
   await Firebase.initializeApp(); // Initialize Firebase
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => CategoryNotifier(), // Provide CategoryNotifier here
+        ),
+      ],
       child: MyApp(),
     ),
   );
