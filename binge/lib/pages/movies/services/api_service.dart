@@ -43,5 +43,21 @@ class ApiService {
     } else {
       throw Exception('Failed to load related movies');
     }
+
+  }
+
+  // Fetch movies based on selected genres
+  Future<List<Movie>> fetchMoviesByGenres(List<String> genres) async {
+    // Join genres to create a query string (e.g., "28,12")
+    final genreString = genres.join(',');
+    final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&with_genres=$genreString'));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List<dynamic> results = data['results'];
+      return results.map((json) => Movie.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load movies by genres');
+    }
   }
 }
