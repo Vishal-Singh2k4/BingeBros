@@ -30,9 +30,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Binge',
-      theme: ThemeData(
+        theme: ThemeData(
         primarySwatch: Colors.blue,
+        brightness: Brightness.light,
       ),
+      darkTheme: ThemeData(
+        primarySwatch: Colors.blue,
+        brightness: Brightness.dark,
+      ),
+      themeMode: ThemeMode.system, // Automatically switch based on system settings
       initialRoute: Routes.splash, // Set SplashScreen as initial route
       onGenerateRoute: Routes.generateRoute,
       debugShowCheckedModeBanner: false,

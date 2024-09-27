@@ -3,13 +3,15 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'services/api_service.dart'; // Import the API service
 import 'models/movie_model.dart'; // Import the model file
 import 'movie_detail_page.dart'; // Import the movie detail page
+import 'package:binge/pages/baseScaffold.dart';
 
 class MoviesHomePageContent extends StatelessWidget {
   final ApiService apiService = ApiService(); // Create an instance of ApiService
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BaseScaffold(
+       // Set the text color of the title
       body: Center(
         child: FutureBuilder<List<Movie>>(
           future: apiService.fetchTrendingMovies(), // Call the fetchTrendingMovies method
@@ -127,19 +129,6 @@ class MoviesHomePageContent extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  Positioned(
-                    top: 16.0, // Adjusted position from the top
-                    left: 16.0, // Align text to the left or center as desired
-                    right: 16.0,
-                    child: Text(
-                      'Trending Now',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black, // Black color for the text
-                      ),
                     ),
                   ),
                 ],

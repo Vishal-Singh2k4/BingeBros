@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
         return [
           MoviesHomePageContent(),
           MoviesSwiperPage(),
-          MoviesLikedPage(),
+          MoviesLikedPage(bookmarkedMovies: [],),
           SettingsPage(),
         ];
       case 'Anime':
@@ -96,7 +96,7 @@ class _HomePageState extends State<HomePage> {
                   label: '', // Remove text label
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.favorite),
+                  icon: Icon(Icons.bookmark),
                   label: '', // Remove text label
                 ),
                 BottomNavigationBarItem(

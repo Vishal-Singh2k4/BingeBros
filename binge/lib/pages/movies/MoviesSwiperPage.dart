@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:swipe_cards/swipe_cards.dart';
 import 'services/api_service.dart'; // Import your API service
 import 'models/movie_model.dart'; // Import your Movie model
+import 'package:binge/pages/baseScaffold.dart';
+import 'MoviesLikedPage.dart';
 
 class MoviesSwiperPage extends StatefulWidget {
   @override
@@ -141,7 +143,7 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BaseScaffold(
       body: SafeArea(
         child: Column(
           children: [
@@ -150,7 +152,7 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
               onPressed: () => openGenresModal(context),
               child: Text('Select Genres'),
             ),
-            Expanded(
+            Expanded( 
               child: matchEngine == null
                   ? Center(child: CircularProgressIndicator())
                   : Column(
@@ -193,10 +195,10 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
                                                   },
                                                 )
                                               : Container(
-                                                  height: 250,
+                                                  height: 150,
                                                   width: double.infinity,
                                                   color: Colors.grey,
-                                                  child: Center(child: Text('No Image Available')),
+                                                   child: Center(child: Text('No Image Available')),
                                                 ),
                                         ),
                                       ),
@@ -225,22 +227,40 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
                             rightSwipeAllowed: true,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text('Liked Movies: ${likedMovies.length}'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => LikedMoviesPage(likedMovies: likedMovies),
-                              ),
-                            );
-                          },
-                          child: Text('View Liked Movies'),
-                        ),
+                        
+       Center(
+  child: SizedBox(
+    width: 200, // Set the width of the button as needed
+    child: ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LikedMoviesPage(likedMovies: likedMovies),
+          ),
+        );
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Color(0xFF9166FF),
+        padding: EdgeInsets.symmetric(vertical: 2.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+      ),
+      child: Text(
+        'View Liked Movies',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  ),
+)
+ 
                       ],
+                      
                     ),
             ),
           ],
@@ -249,20 +269,38 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
     );
   }
 }
-class LikedMoviesPage extends StatelessWidget {
+class LikedMoviesPage extends StatefulWidget {
   final List<Movie> likedMovies;
 
   LikedMoviesPage({required this.likedMovies});
 
+  @override
+  _LikedMoviesPageState createState() => _LikedMoviesPageState();
+}
+
+class _LikedMoviesPageState extends State<LikedMoviesPage> {
+  List<Movie> bookmarkedMovies = []; // Store bookmarked movies
+
   void generateMovieList(BuildContext context) async {
-    List<String> movieTitles = likedMovies.map((movie) => movie.title).toList();
+    List<String> movieTitles = widget.likedMovies.map((movie) => movie.title).toList();
     print("Liked Movies Titles: $movieTitles");
 
-    // Create an instance of ApiService
     ApiService apiService = ApiService();
-    
-    // Call the correct method to fetch movie recommendations
     await apiService.fetchMovieRecommendations(movieTitles);
+  }
+
+  void _toggleBookmark(Movie movie) {
+    setState(() {
+      if (bookmarkedMovies.contains(movie)) {
+        bookmarkedMovies.remove(movie);
+      } else {
+        bookmarkedMovies.add(movie);
+      }
+    });
+    // Show a Snackbar to inform the user about the action
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(bookmarkedMovies.contains(movie) ? '${movie.title} bookmarked!' : '${movie.title} removed from bookmarks!'), duration: Duration(seconds: 1),
+    ));
   }
 
   @override
@@ -277,7 +315,7 @@ class LikedMoviesPage extends StatelessWidget {
           },
         ),
       ),
-      body: likedMovies.isEmpty
+      body: widget.likedMovies.isEmpty
           ? Center(
               child: Text('No liked movies yet'),
             )
@@ -289,16 +327,16 @@ class LikedMoviesPage extends StatelessWidget {
                 ),
                 Expanded(
                   child: ListView.builder(
-                    itemCount: likedMovies.length,
+                    itemCount: widget.likedMovies.length,
                     itemBuilder: (context, index) {
-                      final movie = likedMovies[index];
+                      final movie = widget.likedMovies[index];
                       return ListTile(
                         title: Text(movie.title),
                         leading: Image.network(
                           'https://image.tmdb.org/t/p/w500${movie.posterPath}',
-                          fit: BoxFit.contain, // Maintain aspect ratio
-                          height: 100, // Set a fixed height for the leading image
-                          width: 70, // Set a fixed width for the leading image
+                          fit: BoxFit.contain,
+                          height: 100,
+                          width: 70,
                           loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
                             if (loadingProgress == null) return child;
                             return Center(
@@ -313,12 +351,27 @@ class LikedMoviesPage extends StatelessWidget {
                             return Center(child: Text('Image not available'));
                           },
                         ),
+                        trailing: IconButton(
+                          icon: Icon(bookmarkedMovies.contains(movie) ? Icons.bookmark : Icons.bookmark_border),
+                          onPressed: () => _toggleBookmark(movie),
+                        ),
                         onTap: () {
                           // Handle tap on the movie
                         },
                       );
                     },
                   ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MoviesLikedPage(bookmarkedMovies: bookmarkedMovies),
+                      ),
+                    );
+                  },
+                  child: Text('View Bookmarked Movies'),
                 ),
               ],
             ),
