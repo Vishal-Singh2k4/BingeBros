@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'models/movie_model.dart'; // Import your Movie model
 import 'package:binge/pages/movies/MoviesBookmarked.dart';
-
+import 'services/api_service.dart'; // Import your API service
+import 'package:flutter/services.dart';
 class MoviesLikedPage extends StatefulWidget {
   final List<Movie> likedMovies;
 
@@ -12,26 +13,23 @@ class MoviesLikedPage extends StatefulWidget {
 }
 
 class _MoviesLikedPageState extends State<MoviesLikedPage> {
-  // Track which movies are bookmarked using a Set
   Set<int> bookmarkedMovies = {};
-  // Track which movies are marked as completed using a Set
   Set<int> completedMovies = {};
+  final ApiService apiService = ApiService(); // Initialize the API service
 
-  // Method to clear all liked movies and bookmarked movies
   void _clearSelection() {
     setState(() {
       bookmarkedMovies.clear();
-      widget.likedMovies.clear(); // Clear the liked movies list
+      widget.likedMovies.clear();
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("All liked movies have been cleared"),
-        duration: Duration(seconds: 1), // Set duration to 1 second
+        duration: Duration(seconds: 1),
       ),
     );
   }
 
-  // Method to delete a movie from the list
   void _deleteMovie(int index) {
     setState(() {
       widget.likedMovies.removeAt(index);
@@ -39,9 +37,68 @@ class _MoviesLikedPageState extends State<MoviesLikedPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("Movie has been deleted"),
-        duration: Duration(seconds: 1), // Set duration to 1 second
+        duration: Duration(seconds: 1),
       ),
     );
+  }
+
+  // Method to get recommendations based on liked movies
+  void _getGeminiRecommendations() async {
+    // Prepare the liked movies for the recommendation service
+    final likedMoviesList = widget.likedMovies.map((movie) {
+      return {
+        'id': movie.id,
+        'title': movie.title,
+        'genre_ids': movie.genreIds,
+        // Add other properties if necessary
+      };
+    }).toList();
+
+    try {
+      List<String> recommendations = await apiService.getGeminiRecommendations(likedMoviesList);
+
+      if (recommendations.isNotEmpty) {
+        // Show recommendations in an AlertDialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Recommendations"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: recommendations.map((title) {
+                return ListTile(
+                  title: Text(title),
+                  trailing: IconButton(
+                    icon: Icon(Icons.copy),
+                    onPressed: () {
+                      // Copy to clipboard functionality
+                      Clipboard.setData(ClipboardData(text: title));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("$title copied to clipboard")),
+                      );
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text("Close"),
+              ),
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("No recommendations found")),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error fetching recommendations")),
+      );
+    }
   }
 
   @override
@@ -52,7 +109,7 @@ class _MoviesLikedPageState extends State<MoviesLikedPage> {
         actions: [
           IconButton(
             icon: Icon(Icons.clear_all),
-            onPressed: _clearSelection, // Clear selection on pressed
+            onPressed: _clearSelection,
           ),
         ],
       ),
@@ -69,9 +126,7 @@ class _MoviesLikedPageState extends State<MoviesLikedPage> {
                       final isCompleted = completedMovies.contains(movie.id);
 
                       return ListTile(
-                        title: Text(
-                          movie.title,
-                        ),
+                        title: Text(movie.title),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -83,19 +138,19 @@ class _MoviesLikedPageState extends State<MoviesLikedPage> {
                               onPressed: () {
                                 setState(() {
                                   if (isBookmarked) {
-                                    bookmarkedMovies.remove(movie.id); // Unbookmark movie
+                                    bookmarkedMovies.remove(movie.id);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text('${movie.title} has been removed from your watchlist'),
-                                        duration: Duration(seconds: 1), // Set duration to 1 second
+                                        duration: Duration(seconds: 1),
                                       ),
                                     );
                                   } else {
-                                    bookmarkedMovies.add(movie.id); // Bookmark movie
+                                    bookmarkedMovies.add(movie.id);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text('${movie.title} has been added to your watchlist'),
-                                        duration: Duration(seconds: 1), // Set duration to 1 second
+                                        duration: Duration(seconds: 1),
                                       ),
                                     );
                                   }
@@ -105,14 +160,14 @@ class _MoviesLikedPageState extends State<MoviesLikedPage> {
                             IconButton(
                               icon: Icon(
                                 isCompleted ? Icons.check : Icons.done,
-                                color: isCompleted ? Colors.green : null, // Change color to green if completed
+                                color: isCompleted ? Colors.green : null,
                               ),
                               onPressed: () {
                                 setState(() {
                                   if (isCompleted) {
-                                    completedMovies.remove(movie.id); // Unmark as completed
+                                    completedMovies.remove(movie.id);
                                   } else {
-                                    completedMovies.add(movie.id); // Mark as completed
+                                    completedMovies.add(movie.id);
                                   }
                                 });
                               },
@@ -127,11 +182,9 @@ class _MoviesLikedPageState extends State<MoviesLikedPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   child: Row(
                     children: [
-                      // Expanded widget for 'Open Watchlist' button
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            // Navigate to the MoviesBookmarked page with the bookmarked movies
                             final bookmarkedMovieList = widget.likedMovies
                                 .where((movie) => bookmarkedMovies.contains(movie.id))
                                 .toList();
@@ -145,26 +198,17 @@ class _MoviesLikedPageState extends State<MoviesLikedPage> {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 16.0), // Vertical padding for button height
+                            padding: EdgeInsets.symmetric(vertical: 16.0),
                           ),
                           child: Text("Open Watchlist"),
                         ),
                       ),
-                      SizedBox(width: 16.0), // Spacing between buttons
-                      // Expanded widget for 'Generate' button
+                      SizedBox(width: 16.0),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
-                            // Add the functionality you want for the 'Generate' button here
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Generate button pressed"),
-                                duration: Duration(seconds: 1), // Set duration to 1 second
-                              ),
-                            );
-                          },
+                          onPressed: _getGeminiRecommendations, // Call the recommendations method
                           style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 16.0), // Vertical padding for button height
+                            padding: EdgeInsets.symmetric(vertical: 16.0),
                           ),
                           child: Text("Generate"),
                         ),
