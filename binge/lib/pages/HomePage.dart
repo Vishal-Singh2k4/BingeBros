@@ -9,7 +9,6 @@ import 'package:binge/pages/books/BooksSwiperPage.dart';
 import 'package:binge/pages/books/BooksLikedPage.dart';
 import 'package:binge/pages/movies/MoviesHomePage.dart';
 import 'package:binge/pages/movies/MoviesSwiperPage.dart';
-import 'package:binge/pages/movies/MoviesLikedPage.dart';
 import 'package:binge/pages/movies/MoviesBookmarked.dart';
 import 'package:binge/pages/anime/AnimeHomePage.dart';
 import 'package:binge/pages/anime/AnimeSwiperPage.dart';
