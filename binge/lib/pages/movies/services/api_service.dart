@@ -5,6 +5,8 @@ import '../models/movie_model.dart'; // Adjust the path as needed
 class ApiService {
   final String apiKey = '827ff2b76ef87771bf42fef7226d8093';
   final String baseUrl = 'https://api.themoviedb.org/3';
+  final String geminiApiUrl = 'https://api.gemini.com/v1/'; // Replace with the actual Gemini API URL
+  final String geminiApiKey = 'YOUR_GEMINI_API_KEY'; // Add your Gemini API key here
 
   // Fetch trending movies for the "Trending" section
   Future<List<Movie>> fetchTrendingMovies() async {
@@ -43,7 +45,6 @@ class ApiService {
     } else {
       throw Exception('Failed to load related movies');
     }
-
   }
 
   // Fetch movies based on selected genres
@@ -58,6 +59,38 @@ class ApiService {
       return results.map((json) => Movie.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load movies by genres');
+    }
+  }
+
+  // Fetch movie recommendations from Gemini API
+  Future<void> fetchMovieRecommendations(List<String> movieTitles) async {
+    // Create the prompt for the Gemini API
+    String prompt = 'Give only movie recommendations in a JSON format based on the list provided: ${movieTitles.join(', ')}';
+
+    // Create the request body
+    Map<String, dynamic> requestBody = {
+      'prompt': prompt,
+      'max_tokens': 100, // Adjust based on your needs
+      // Add other parameters if necessary
+    };
+    print("Making Request");
+    // Make the POST request to the Gemini API
+    final response = await http.post(
+      Uri.parse('$geminiApiUrl/your-endpoint'), // Replace with the actual endpoint
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $geminiApiKey', // Use your Gemini API key here
+      },
+      body: jsonEncode(requestBody),
+    );
+
+    if (response.statusCode == 200) {
+
+      final data = jsonDecode(response.body);
+      // Here you can process the data received from Gemini API
+      print('Gemini Recommendations: $data');
+    } else {
+      throw Exception('Failed to get recommendations from Gemini API');
     }
   }
 }
