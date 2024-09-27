@@ -71,26 +71,6 @@ class _MoviesLikedPageState extends State<MoviesLikedPage> {
                       return ListTile(
                         title: Text(
                           movie.title,
-                          style: TextStyle(
-                            decoration: isCompleted
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none, // Strike out if completed
-                          ),
-                        ),
-                        leading: IconButton(
-                          icon: Icon(
-                            isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-                            color: isCompleted ? Colors.green : null, // Change color to green if completed
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              if (isCompleted) {
-                                completedMovies.remove(movie.id); // Unmark as completed
-                              } else {
-                                completedMovies.add(movie.id); // Mark as completed
-                              }
-                            });
-                          },
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -123,9 +103,18 @@ class _MoviesLikedPageState extends State<MoviesLikedPage> {
                               },
                             ),
                             IconButton(
-                              icon: Icon(Icons.delete),
+                              icon: Icon(
+                                isCompleted ? Icons.check : Icons.done,
+                                color: isCompleted ? Colors.green : null, // Change color to green if completed
+                              ),
                               onPressed: () {
-                                _deleteMovie(index); // Delete movie from the list
+                                setState(() {
+                                  if (isCompleted) {
+                                    completedMovies.remove(movie.id); // Unmark as completed
+                                  } else {
+                                    completedMovies.add(movie.id); // Mark as completed
+                                  }
+                                });
                               },
                             ),
                           ],
@@ -135,23 +124,52 @@ class _MoviesLikedPageState extends State<MoviesLikedPage> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Navigate to the MoviesBookmarked page with the bookmarked movies
-                      final bookmarkedMovieList = widget.likedMovies
-                          .where((movie) => bookmarkedMovies.contains(movie.id))
-                          .toList();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MoviesBookmarked(
-                            bookmarkedMovies: bookmarkedMovieList,
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    children: [
+                      // Expanded widget for 'Open Watchlist' button
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Navigate to the MoviesBookmarked page with the bookmarked movies
+                            final bookmarkedMovieList = widget.likedMovies
+                                .where((movie) => bookmarkedMovies.contains(movie.id))
+                                .toList();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MoviesBookmarked(
+                                  bookmarkedMovies: bookmarkedMovieList,
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 16.0), // Vertical padding for button height
                           ),
+                          child: Text("Open Watchlist"),
                         ),
-                      );
-                    },
-                    child: Text("Open Watchlist"),
+                      ),
+                      SizedBox(width: 16.0), // Spacing between buttons
+                      // Expanded widget for 'Generate' button
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Add the functionality you want for the 'Generate' button here
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("Generate button pressed"),
+                                duration: Duration(seconds: 1), // Set duration to 1 second
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 16.0), // Vertical padding for button height
+                          ),
+                          child: Text("Generate"),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
