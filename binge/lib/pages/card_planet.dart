@@ -78,7 +78,7 @@ class CardPlanet extends StatelessWidget {
         ),
         if (isLastPage)
           Positioned(
-            bottom: 20,
+            bottom: 30,
             right: 20,
             child: Container(
               decoration: BoxDecoration(
