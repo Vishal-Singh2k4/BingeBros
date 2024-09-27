@@ -3,7 +3,7 @@ import 'package:swipe_cards/swipe_cards.dart';
 import 'services/api_service.dart'; // Import your API service
 import 'models/movie_model.dart'; // Import your Movie model
 import 'package:binge/pages/baseScaffold.dart';
-import 'MoviesLikedPage.dart';
+import 'MoviesLikedPage.dart'; // Import the liked movies page
 
 class MoviesSwiperPage extends StatefulWidget {
   @override
@@ -47,24 +47,31 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
 
     List<Movie> movies = await apiService.fetchMoviesByGenres(selectedGenres);
 
-    setState(() {
-      swipeItems = movies.map((movie) {
-        return SwipeItem(
-          content: movie,
-          likeAction: () {
-            _addMovieToLiked(movie); // Call the method to handle liking a movie
-          },
-          nopeAction: () {
-            print('Nope ${movie.title}');
-          },
-          superlikeAction: () {
-            _addMovieToLiked(movie); // Call the method for super liking a movie
-          },
-        );
-      }).toList();
+    if (movies.isNotEmpty) {
+      setState(() {
+        swipeItems = movies.map((movie) {
+          return SwipeItem(
+            content: movie,
+            likeAction: () {
+              _addMovieToLiked(movie); // Call the method to handle liking a movie
+            },
+            nopeAction: () {
+              print('Nope ${movie.title}');
+            },
+            superlikeAction: () {
+              _addMovieToLiked(movie); // Call the method for super liking a movie
+            },
+          );
+        }).toList();
 
-      matchEngine = MatchEngine(swipeItems: swipeItems);
-    });
+        matchEngine = MatchEngine(swipeItems: swipeItems);
+      });
+    } else {
+      setState(() {
+        swipeItems.clear(); // Clear swipe items if no movies found
+        matchEngine = null; // Reset the match engine
+      });
+    }
   }
 
   void _addMovieToLiked(Movie movie) {
@@ -148,233 +155,133 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
         child: Column(
           children: [
             SizedBox(height: 10), // Add space at the top for padding
-            ElevatedButton(
-              onPressed: () => openGenresModal(context),
-              child: Text('Select Genres'),
-            ),
-            Expanded( 
-              child: matchEngine == null
-                  ? Center(child: CircularProgressIndicator())
-                  : Column(
-                      children: [
-                        Expanded(
-                          child: SwipeCards(
-                            matchEngine: matchEngine!,
-                            itemBuilder: (BuildContext context, int index) {
-                              final movie = swipeItems[index].content as Movie;
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                                child: Card(
-                                  elevation: 4,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16.0),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Expanded(
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(16.0),
-                                          child: movie.posterPath != null
-                                              ? Image.network(
-                                                  'https://image.tmdb.org/t/p/w500${movie.posterPath}',
-                                                  fit: BoxFit.cover,
-                                                  width: double.infinity,
-                                                  loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                                                    if (loadingProgress == null) return child;
-                                                    return Center(
-                                                      child: CircularProgressIndicator(
-                                                        value: loadingProgress.expectedTotalBytes != null
-                                                            ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
-                                                            : null,
-                                                      ),
-                                                    );
-                                                  },
-                                                  errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
-                                                    return Center(child: Text('Image not available'));
-                                                  },
-                                                )
-                                              : Container(
-                                                  height: 150,
-                                                  width: double.infinity,
-                                                  color: Colors.grey,
-                                                   child: Center(child: Text('No Image Available')),
-                                                ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                          movie.title,
-                                          style: TextStyle(
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold,
+            if (selectedGenres.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Text("No genres selected. Please select genres to view movies."),
+                ),
+              )
+            else if (swipeItems.isEmpty && matchEngine == null)
+              Expanded(
+                child: Center(child: Text("Select genres to show movies.")), // Updated message
+              )
+            else
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: matchEngine == null
+                          ? Center(child: CircularProgressIndicator())
+                          : SwipeCards(
+                              matchEngine: matchEngine!,
+                              itemBuilder: (BuildContext context, int index) {
+                                final movie = swipeItems[index].content as Movie;
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                  child: Card(
+                                    elevation: 4,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16.0),
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(16.0),
+                                            child: movie.posterPath != null
+                                                ? Image.network(
+                                                    'https://image.tmdb.org/t/p/w500${movie.posterPath}',
+                                                    fit: BoxFit.cover,
+                                                    width: double.infinity,
+                                                    loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                                                      if (loadingProgress == null) return child;
+                                                      return Center(
+                                                        child: CircularProgressIndicator(
+                                                          value: loadingProgress.expectedTotalBytes != null
+                                                              ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
+                                                              : null,
+                                                        ),
+                                                      );
+                                                    },
+                                                    errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                                                      return Center(child: Text('Image not available'));
+                                                    },
+                                                  )
+                                                : Container(
+                                                    height: 150,
+                                                    width: double.infinity,
+                                                    color: Colors.grey,
+                                                    child: Center(child: Text('No Image Available')),
+                                                  ),
                                           ),
-                                          textAlign: TextAlign.center,
                                         ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            movie.title,
+                                            style: TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                              onStackFinished: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text("End of Movies"),
+                                    content: Text("You've gone through all the movies. Would you like to start again?"),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                          fetchMoviesByGenres();
+                                        },
+                                        child: Text("Yes"),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Text("No"),
                                       ),
                                     ],
                                   ),
-                                ),
-                              );
-                            },
-                            onStackFinished: () {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text('No more movies!'),
-                              ));
-                            },
-                            leftSwipeAllowed: true,
-                            rightSwipeAllowed: true,
-                          ),
-                        ),
-                        
-       Center(
-  child: SizedBox(
-    width: 200, // Set the width of the button as needed
-    child: ElevatedButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => LikedMoviesPage(likedMovies: likedMovies),
-          ),
-        );
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Color(0xFF9166FF),
-        padding: EdgeInsets.symmetric(vertical: 2.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-      ),
-      child: Text(
-        'View Liked Movies',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 15,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    ),
-  ),
-)
- 
-                      ],
-                      
+                                );
+                              },
+                            ),
                     ),
-            ),
+                    SizedBox(height: 10), // Add space between movie cards and button
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => MoviesLikedPage(likedMovies: likedMovies)),
+                        );
+                      },
+                      child: Text("View Liked Movies"),
+                    ),
+                    SizedBox(height: 10), // Add space at the bottom for padding
+                  ],
+                ),
+              ),
           ],
         ),
       ),
-    );
-  }
-}
-class LikedMoviesPage extends StatefulWidget {
-  final List<Movie> likedMovies;
-
-  LikedMoviesPage({required this.likedMovies});
-
-  @override
-  _LikedMoviesPageState createState() => _LikedMoviesPageState();
-}
-
-class _LikedMoviesPageState extends State<LikedMoviesPage> {
-  List<Movie> bookmarkedMovies = []; // Store bookmarked movies
-
-  void generateMovieList(BuildContext context) async {
-    List<String> movieTitles = widget.likedMovies.map((movie) => movie.title).toList();
-    print("Liked Movies Titles: $movieTitles");
-
-    ApiService apiService = ApiService();
-    await apiService.fetchMovieRecommendations(movieTitles);
-  }
-
-  void _toggleBookmark(Movie movie) {
-    setState(() {
-      if (bookmarkedMovies.contains(movie)) {
-        bookmarkedMovies.remove(movie);
-      } else {
-        bookmarkedMovies.add(movie);
-      }
-    });
-    // Show a Snackbar to inform the user about the action
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(bookmarkedMovies.contains(movie) ? '${movie.title} bookmarked!' : '${movie.title} removed from bookmarks!'), duration: Duration(seconds: 1),
-    ));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Liked Movies'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          openGenresModal(context);
+        },
+        child: Icon(Icons.category),
+        tooltip: 'Select Genres',
       ),
-      body: widget.likedMovies.isEmpty
-          ? Center(
-              child: Text('No liked movies yet'),
-            )
-          : Column(
-              children: [
-                ElevatedButton(
-                  onPressed: () => generateMovieList(context),
-                  child: Text('Generate'),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: widget.likedMovies.length,
-                    itemBuilder: (context, index) {
-                      final movie = widget.likedMovies[index];
-                      return ListTile(
-                        title: Text(movie.title),
-                        leading: Image.network(
-                          'https://image.tmdb.org/t/p/w500${movie.posterPath}',
-                          fit: BoxFit.contain,
-                          height: 100,
-                          width: 70,
-                          loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
-                                    : null,
-                              ),
-                            );
-                          },
-                          errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
-                            return Center(child: Text('Image not available'));
-                          },
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(bookmarkedMovies.contains(movie) ? Icons.bookmark : Icons.bookmark_border),
-                          onPressed: () => _toggleBookmark(movie),
-                        ),
-                        onTap: () {
-                          // Handle tap on the movie
-                        },
-                      );
-                    },
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MoviesLikedPage(bookmarkedMovies: bookmarkedMovies),
-                      ),
-                    );
-                  },
-                  child: Text('View Bookmarked Movies'),
-                ),
-              ],
-            ),
     );
   }
 }

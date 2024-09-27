@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
         return [
           MoviesHomePageContent(),
           MoviesSwiperPage(),
-          MoviesLikedPage(bookmarkedMovies: [],),
+          MoviesLikedPage(likedMovies: [],),
           SettingsPage(),
         ];
       case 'Anime':
