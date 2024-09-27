@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'models/movie_model.dart'; // Import your Movie model
+import 'package:binge/pages/movies/MoviesBookmarked.dart';
 
 class MoviesLikedPage extends StatefulWidget {
   final List<Movie> likedMovies;
@@ -57,77 +58,103 @@ class _MoviesLikedPageState extends State<MoviesLikedPage> {
       ),
       body: widget.likedMovies.isEmpty
           ? Center(child: Text("No liked movies"))
-          : ListView.builder(
-              itemCount: widget.likedMovies.length,
-              itemBuilder: (context, index) {
-                final movie = widget.likedMovies[index];
-                final isBookmarked = bookmarkedMovies.contains(movie.id);
-                final isCompleted = completedMovies.contains(movie.id);
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: widget.likedMovies.length,
+                    itemBuilder: (context, index) {
+                      final movie = widget.likedMovies[index];
+                      final isBookmarked = bookmarkedMovies.contains(movie.id);
+                      final isCompleted = completedMovies.contains(movie.id);
 
-                return ListTile(
-                  title: Text(
-                    movie.title,
-                    style: TextStyle(
-                      decoration: isCompleted
-                          ? TextDecoration.lineThrough
-                          : TextDecoration.none, // Strike out if completed
-                    ),
-                  ),
-                  leading: IconButton(
-                    icon: Icon(
-                      isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-                      color: isCompleted ? Colors.green : null, // Change color to green if completed
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        if (isCompleted) {
-                          completedMovies.remove(movie.id); // Unmark as completed
-                        } else {
-                          completedMovies.add(movie.id); // Mark as completed
-                        }
-                      });
+                      return ListTile(
+                        title: Text(
+                          movie.title,
+                          style: TextStyle(
+                            decoration: isCompleted
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none, // Strike out if completed
+                          ),
+                        ),
+                        leading: IconButton(
+                          icon: Icon(
+                            isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+                            color: isCompleted ? Colors.green : null, // Change color to green if completed
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              if (isCompleted) {
+                                completedMovies.remove(movie.id); // Unmark as completed
+                              } else {
+                                completedMovies.add(movie.id); // Mark as completed
+                              }
+                            });
+                          },
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                                color: isBookmarked ? Color(0xFF9166FF) : null,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  if (isBookmarked) {
+                                    bookmarkedMovies.remove(movie.id); // Unbookmark movie
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('${movie.title} has been removed from your watchlist'),
+                                        duration: Duration(seconds: 1), // Set duration to 1 second
+                                      ),
+                                    );
+                                  } else {
+                                    bookmarkedMovies.add(movie.id); // Bookmark movie
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('${movie.title} has been added to your watchlist'),
+                                        duration: Duration(seconds: 1), // Set duration to 1 second
+                                      ),
+                                    );
+                                  }
+                                });
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () {
+                                _deleteMovie(index); // Delete movie from the list
+                              },
+                            ),
+                          ],
+                        ),
+                      );
                     },
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                          color: isBookmarked ? Color(0xFF9166FF) : null,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Navigate to the MoviesBookmarked page with the bookmarked movies
+                      final bookmarkedMovieList = widget.likedMovies
+                          .where((movie) => bookmarkedMovies.contains(movie.id))
+                          .toList();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MoviesBookmarked(
+                            bookmarkedMovies: bookmarkedMovieList,
+                          ),
                         ),
-                        onPressed: () {
-                          setState(() {
-                            if (isBookmarked) {
-                              bookmarkedMovies.remove(movie.id); // Unbookmark movie
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('${movie.title} has been removed from your watchlist'),
-                                  duration: Duration(seconds: 1), // Set duration to 1 second
-                                ),
-                              );
-                            } else {
-                              bookmarkedMovies.add(movie.id); // Bookmark movie
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('${movie.title} has been added to your watchlist'),
-                                  duration: Duration(seconds: 1), // Set duration to 1 second
-                                ),
-                              );
-                            }
-                          });
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {
-                          _deleteMovie(index); // Delete movie from the list
-                        },
-                      ),
-                    ],
+                      );
+                    },
+                    child: Text("Open Watchlist"),
                   ),
-                );
-              },
+                ),
+              ],
             ),
     );
   }

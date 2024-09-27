@@ -244,7 +244,7 @@ class LikedMoviesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Liked Movies')),
+      appBar: AppBar(title: Text('Wish List')),
       body: likedMovies.isEmpty
           ? Center(child: Text('No liked movies yet'))
           : ListView.builder(
