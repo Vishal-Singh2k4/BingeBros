@@ -6,7 +6,7 @@ class ApiService {
   final String apiKey = '827ff2b76ef87771bf42fef7226d8093';
   final String baseUrl = 'https://api.themoviedb.org/3';
   final String geminiApiUrl = 'https://api.gemini.com/v1/'; // Replace with the actual Gemini API URL
-  final String geminiApiKey = 'YOUR_GEMINI_API_KEY'; // Add your Gemini API key here
+  final String geminiApiKey = 'AIzaSyBPvmKxGignLAvfxrlu6HB6iaWht7rYhnw'; // Add your Gemini API key here
 
   // Fetch trending movies for the "Trending" section
   Future<List<Movie>> fetchTrendingMovies() async {
@@ -63,7 +63,7 @@ class ApiService {
   }
 
   // Fetch movie recommendations from Gemini API
-  Future<void> fetchMovieRecommendations(List<String> movieTitles) async {
+  Future<List<String>> fetchMovieRecommendations(List<String> movieTitles) async {
     // Create the prompt for the Gemini API
     String prompt = 'Give only movie recommendations in a JSON format based on the list provided: ${movieTitles.join(', ')}';
 
@@ -73,7 +73,7 @@ class ApiService {
       'max_tokens': 100, // Adjust based on your needs
       // Add other parameters if necessary
     };
-    print("Making Request");
+
     // Make the POST request to the Gemini API
     final response = await http.post(
       Uri.parse('$geminiApiUrl/your-endpoint'), // Replace with the actual endpoint
@@ -85,10 +85,10 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-
       final data = jsonDecode(response.body);
-      // Here you can process the data received from Gemini API
-      print('Gemini Recommendations: $data');
+      // Here, we assume the response is a list of recommended movie titles
+      List<String> recommendations = List<String>.from(data['recommendations']); // Adjust this based on the actual structure of the response
+      return recommendations;
     } else {
       throw Exception('Failed to get recommendations from Gemini API');
     }

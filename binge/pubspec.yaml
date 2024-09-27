@@ -8,6 +8,8 @@ environment:
   sdk: '>=3.3.4 <4.0.0'
 
 dependencies:
+  flutter_gemini: ^2.0.5
+
   http: ^1.2.2 # This is for making HTTP requests
   swipe_cards: 2.0.0+1  # Add this package for swipe functionality
   carousel_slider: ^5.0.0

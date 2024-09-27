@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:swipe_cards/swipe_cards.dart';
 import 'services/api_service.dart'; // Import your API service
 import 'models/movie_model.dart'; // Import your Movie model
+import 'dart:convert'; // Import this for jsonEncode
 
 class MoviesSwiperPage extends StatefulWidget {
   @override
@@ -249,20 +250,49 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
     );
   }
 }
+
 class LikedMoviesPage extends StatelessWidget {
   final List<Movie> likedMovies;
 
   LikedMoviesPage({required this.likedMovies});
 
   void generateMovieList(BuildContext context) async {
-    List<String> movieTitles = likedMovies.map((movie) => movie.title).toList();
-    print("Liked Movies Titles: $movieTitles");
+    // Create a list of maps with id and title
+    List<Map<String, dynamic>> movieList = likedMovies.map((movie) {
+      return {
+        'id': movie.id,
+        'title': movie.title,
+      };
+    }).toList();
+
+    // Convert the list of maps to a list of JSON strings
+    List<String> jsonMoviesList = movieList.map((movie) => jsonEncode(movie)).toList();
+    print("Liked Movies JSON: $jsonMoviesList");
 
     // Create an instance of ApiService
     ApiService apiService = ApiService();
-    
+
     // Call the correct method to fetch movie recommendations
-    await apiService.fetchMovieRecommendations(movieTitles);
+    try {
+      final recommendations = await apiService.fetchMovieRecommendations(jsonMoviesList);
+      // Display or handle the recommendations here
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Movie Recommendations'),
+          content: Text(recommendations.toString()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (error) {
+      // Handle any errors that occur during the API call
+      print('Error fetching recommendations: $error');
+    }
   }
 
   @override
@@ -281,47 +311,46 @@ class LikedMoviesPage extends StatelessWidget {
           ? Center(
               child: Text('No liked movies yet'),
             )
-          : Column(
-              children: [
-                ElevatedButton(
-                  onPressed: () => generateMovieList(context),
-                  child: Text('Generate'),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: likedMovies.length,
-                    itemBuilder: (context, index) {
-                      final movie = likedMovies[index];
-                      return ListTile(
-                        title: Text(movie.title),
-                        leading: Image.network(
-                          'https://image.tmdb.org/t/p/w500${movie.posterPath}',
-                          fit: BoxFit.contain, // Maintain aspect ratio
-                          height: 100, // Set a fixed height for the leading image
-                          width: 70, // Set a fixed width for the leading image
-                          loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
-                                    : null,
-                              ),
-                            );
-                          },
-                          errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
-                            return Center(child: Text('Image not available'));
-                          },
-                        ),
-                        onTap: () {
-                          // Handle tap on the movie
-                        },
-                      );
+          : Expanded(
+              child: ListView.builder(
+                itemCount: likedMovies.length,
+                itemBuilder: (context, index) {
+                  final movie = likedMovies[index];
+                  return ListTile(
+                    title: Text(movie.title),
+                    leading: Image.network(
+                      'https://image.tmdb.org/t/p/w500${movie.posterPath}',
+                      fit: BoxFit.contain, // Maintain aspect ratio
+                      height: 100, // Set a fixed height for the leading image
+                      width: 70, // Set a fixed width for the leading image
+                      loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
+                                : null,
+                          ),
+                        );
+                      },
+                      errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                        return Center(child: Text('Image not available'));
+                      },
+                    ),
+                    onTap: () {
+                      // Handle tap on the movie
                     },
-                  ),
-                ),
-              ],
+                  );
+                },
+              ),
             ),
     );
   }
+}
+
+void main() {
+  runApp(MaterialApp(
+    title: 'Movies App',
+    home: MoviesSwiperPage(),
+  ));
 }
