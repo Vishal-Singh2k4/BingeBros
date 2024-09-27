@@ -1,12 +1,19 @@
+import 'dart:async'; // Import this for Completer
 import 'dart:convert';
+import 'dart:developer';
 import 'package:http/http.dart' as http;
+import 'package:flutter_gemini/flutter_gemini.dart';
 import '../models/movie_model.dart'; // Adjust the path as needed
 
 class ApiService {
   final String apiKey = '827ff2b76ef87771bf42fef7226d8093';
   final String baseUrl = 'https://api.themoviedb.org/3';
-  final String geminiApiUrl = 'https://api.gemini.com/v1/'; // Replace with the actual Gemini API URL
-  final String geminiApiKey = 'AIzaSyBPvmKxGignLAvfxrlu6HB6iaWht7rYhnw'; // Add your Gemini API key here
+  late final Gemini gemini; // Use late initialization for the gemini instance
+
+  ApiService() {
+    // Initialize the Gemini API with your API key in the constructor body
+    gemini = Gemini.init(apiKey: 'AIzaSyBPvmKxGignLAvfxrlu6HB6iaWht7rYhnw');
+  }
 
   // Fetch trending movies for the "Trending" section
   Future<List<Movie>> fetchTrendingMovies() async {
@@ -49,7 +56,6 @@ class ApiService {
 
   // Fetch movies based on selected genres
   Future<List<Movie>> fetchMoviesByGenres(List<String> genres) async {
-    // Join genres to create a query string (e.g., "28,12")
     final genreString = genres.join(',');
     final response = await http.get(Uri.parse('$baseUrl/discover/movie?api_key=$apiKey&with_genres=$genreString'));
 
@@ -62,54 +68,91 @@ class ApiService {
     }
   }
 
-  // Fetch movie recommendations from Gemini API
-  Future<List<String>> fetchMovieRecommendations(List<String> movieTitles) async {
-    // Create the prompt for the Gemini API
-    String prompt = 'Give only movie recommendations in a JSON format based on the list provided: ${movieTitles.join(', ')}';
-
-    // Create the request body
-    Map<String, dynamic> requestBody = {
-      'prompt': prompt,
-      'max_tokens': 100, // Adjust based on your needs
-      // Add other parameters if necessary
-    };
-
-    // Make the POST request to the Gemini API
-    final response = await http.post(
-      Uri.parse('$geminiApiUrl/your-endpoint'), // Replace with the actual endpoint
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $geminiApiKey', // Use your Gemini API key here
-      },
-      body: jsonEncode(requestBody),
-    );
+  // Search movies
+  Future<List<Movie>> searchMovies(String query) async {
+    final response = await http.get(Uri.parse('$baseUrl/search/movie?api_key=$apiKey&query=$query'));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      // Here, we assume the response is a list of recommended movie titles
-      List<String> recommendations = List<String>.from(data['recommendations']); // Adjust this based on the actual structure of the response
-      return recommendations;
+      print(data); // Log the entire response for debugging
+
+      final List<dynamic> results = data['results'];
+      results.forEach((movie) => print(movie)); // Log each movie result for further inspection
+
+      return results.take(10).map((json) => Movie.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to get recommendations from Gemini API');
+      throw Exception('Failed to search movies');
     }
   }
-Future<List<Movie>> searchMovies(String query) async {
-  final response = await http.get(Uri.parse('$baseUrl/search/movie?api_key=$apiKey&query=$query'));
 
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    print(data); // Log the entire response for debugging
+Future<List<String>> getGeminiRecommendations(List<Map<String, dynamic>> likedMovies) async {
+  final prompt = jsonEncode(likedMovies);
+  final requestPrompt = '''
+You are a movie recommendation system. Given the following list of movies, please provide exactly **5** similar movie titles (DO NOT REPEAT THE GIVEN TITLES) in a **valid JSON array format**. The titles should be surrounded by double quotes and separated by commas. Ensure that the output does not contain any additional text, explanations, or formatting errors.
 
-    final List<dynamic> results = data['results'];
-    // Log each movie result for further inspection
-    results.forEach((movie) => print(movie));
+Here are the movies:
+$prompt
 
-    return results.take(10).map((json) => Movie.fromJson(json)).toList();
-  } else {
-    throw Exception('Failed to search movies');
+Your output should look like this: ["Recommended Movie name 1", "Recommended Movie name 2", "Recommended Movie name 3", "Recommended Movie name 4", "Recommended Movie name 5"]
+''';
+
+  print('Request Prompt: $requestPrompt'); // Log the request prompt
+
+  final recommendationsCompleter = Completer<List<String>>(); // Changed to return List<String>
+  List<String> recommendations = [];
+  StringBuffer rawOutputBuffer = StringBuffer(); // Buffer to hold raw output
+  bool isCompleted = false; // Track if the completer has been completed
+
+  try {
+    final stream = gemini.streamGenerateContent(requestPrompt);
+    await for (final value in stream) {
+      if (value.output != null) {
+        // Append the output to the buffer
+        rawOutputBuffer.write(value.output);
+        print('Raw API Response: ${value.output}'); // Print the raw API response
+
+        // Attempt to parse the output after each append
+        String cleanedOutput = rawOutputBuffer.toString().trim();
+
+        try {
+          // Check if cleanedOutput is a valid JSON array
+          if (cleanedOutput.startsWith('[') && cleanedOutput.endsWith(']')) {
+            recommendations = List<String>.from(jsonDecode(cleanedOutput));
+            print("RECOMMENDATIONS");
+            print(recommendations);
+            // Complete the future when all data is received
+            if (!isCompleted) {
+              isCompleted = true; // Set the flag to true
+              recommendationsCompleter.complete(recommendations);
+            }
+          }
+        } catch (e) {
+          print('Failed to parse response: $cleanedOutput'); // Log the response that failed to parse
+          log('JSON parsing error', error: e);
+          if (!isCompleted) {
+            isCompleted = true; // Set the flag to true
+            recommendationsCompleter.completeError('Failed to parse JSON');
+          }
+        }
+      } else {
+        print('No recommendations returned.');
+        if (!isCompleted) {
+          isCompleted = true; // Set the flag to true
+          recommendationsCompleter.completeError('No recommendations returned');
+        }
+      }
+    }
+  } catch (e) {
+    log('streamGenerateContent exception', error: e);
+    if (!isCompleted) {
+      isCompleted = true; // Set the flag to true
+      recommendationsCompleter.completeError('Failed to load recommendations from Gemini: $e');
+    }
   }
-}
 
+  // Await the completer's future
+  return recommendationsCompleter.future;
+}
 
 
 }

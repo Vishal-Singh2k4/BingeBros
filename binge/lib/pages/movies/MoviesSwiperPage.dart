@@ -45,6 +45,7 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
       return;
     }
 
+    // Fetch movies based on selected genres
     List<Movie> movies = await apiService.fetchMoviesByGenres(selectedGenres);
 
     if (movies.isNotEmpty) {
@@ -148,6 +149,59 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
     );
   }
 
+  void getGeminiRecommendations() async {
+    // Convert likedMovies to the required format
+    List<Map<String, dynamic>> likedMoviesData = likedMovies.map((movie) {
+      return {
+        'id': movie.id,
+        'title': movie.title,
+        // Add any other properties you need
+      };
+    }).toList();
+
+    // Call your Gemini recommendations API method
+    try {
+      var recommendations = await apiService.getGeminiRecommendations(likedMoviesData);
+
+      // Show recommendations in a dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Recommended Movies"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: recommendations.map((title) => Text(title)).toList(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Close"),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      // Handle error and show a message
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Error"),
+          content: Text("Failed to fetch recommendations. Please try again."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Close"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BaseScaffold(
@@ -242,15 +296,15 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
                                       TextButton(
                                         onPressed: () {
                                           Navigator.of(context).pop();
-                                          fetchMoviesByGenres();
+                                          // Logic to restart swiping
                                         },
-                                        child: Text("Yes"),
+                                        child: Text("Restart"),
                                       ),
                                       TextButton(
                                         onPressed: () {
                                           Navigator.of(context).pop();
                                         },
-                                        child: Text("No"),
+                                        child: Text("Close"),
                                       ),
                                     ],
                                   ),
@@ -258,29 +312,30 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
                               },
                             ),
                     ),
-                    SizedBox(height: 10), // Add space between movie cards and button
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => MoviesLikedPage(likedMovies: likedMovies)),
-                        );
-                      },
-                      child: Text("View Liked Movies"),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => MoviesLikedPage(likedMovies: likedMovies)),
+                          );
+                        },
+                        child: Text("Liked Movies"),
+                      ),
                     ),
-                    SizedBox(height: 10), // Add space at the bottom for padding
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: ElevatedButton(
+                        onPressed: getGeminiRecommendations, // Call the new function on button press
+                        child: Text("Get Recommendations"),
+                      ),
+                    ),
                   ],
                 ),
               ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          openGenresModal(context);
-        },
-        child: Icon(Icons.category),
-        tooltip: 'Select Genres',
       ),
     );
   }

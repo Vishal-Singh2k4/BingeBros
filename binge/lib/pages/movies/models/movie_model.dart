@@ -39,8 +39,13 @@ class Movie {
       posterPath: json['poster_path'] as String?, // Allow for null posterPath
       releaseDate: json['release_date'] as String? ?? 'Unknown', // Provide default value for releaseDate
       overview: json['overview'] as String? ?? 'No overview available', // Provide default value for overview
-      genres: genreList.map((genreJson) => Genre.fromJson(genreJson)).toList(),
+      genres: genreList.map((genreJson) => Genre.fromJson(genreJson as Map<String, dynamic>)).toList(), // Ensure correct type casting
       voteAverage: (json['vote_average'] as num?)?.toDouble() ?? 0.0, // Safely parse voteAverage
     );
+  }
+
+  @override
+  String toString() {
+    return 'Movie{id: $id, title: $title, posterPath: $posterPath, releaseDate: $releaseDate, overview: $overview, genres: $genres, voteAverage: $voteAverage}';
   }
 }
