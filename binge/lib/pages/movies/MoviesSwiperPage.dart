@@ -4,7 +4,6 @@ import 'services/api_service.dart'; // Import your API service
 import 'models/movie_model.dart'; // Import your Movie model
 import 'package:binge/pages/baseScaffold.dart';
 import 'MoviesLikedPage.dart'; // Import the liked movies page
-import 'package:flutter/services.dart'; // Import the services package for Clipboard
 
 class MoviesSwiperPage extends StatefulWidget {
   @override
@@ -150,92 +149,58 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
     );
   }
 
-void getGeminiRecommendations() async {
-  // Convert likedMovies to the required format
-  List<Map<String, dynamic>> likedMoviesData = likedMovies.map((movie) {
-    return {
-      'id': movie.id,
-      'title': movie.title,
-      // Add any other properties you need
-    };
-  }).toList();
+  void getGeminiRecommendations() async {
+    // Convert likedMovies to the required format
+    List<Map<String, dynamic>> likedMoviesData = likedMovies.map((movie) {
+      return {
+        'id': movie.id,
+        'title': movie.title,
+        // Add any other properties you need
+      };
+    }).toList();
 
-  // Call your Gemini recommendations API method
-  try {
-    var recommendations = await apiService.getGeminiRecommendations(likedMoviesData);
+    // Call your Gemini recommendations API method
+    try {
+      var recommendations = await apiService.getGeminiRecommendations(likedMoviesData);
 
-    // Show recommendations in a dialog
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Recommended Movies", style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: recommendations.map((title) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500, // Slightly bolder text for better visibility
-                        color: Colors.black87, // Use a darker color for better contrast
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.copy, color: Colors.blue), // Blue color for the copy icon
-                    onPressed: () {
-                      // Copy the movie title to the clipboard
-                      Clipboard.setData(ClipboardData(text: title)).then((_) {
-                        // Show a message confirming the copy action
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('$title copied!'), // Confirmation message
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      });
-                    },
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
+      // Show recommendations in a dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Recommended Movies"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: recommendations.map((title) => Text(title)).toList(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Close"),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text("Close"),
-          ),
-        ],
-      ),
-    );
-  } catch (e) {
-    // Handle error and show a message
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Error", style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text("Failed to fetch recommendations. Please try again."),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text("Close"),
-          ),
-        ],
-      ),
-    );
+      );
+    } catch (e) {
+      // Handle error and show a message
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Error"),
+          content: Text("Failed to fetch recommendations. Please try again."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Close"),
+            ),
+          ],
+        ),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
