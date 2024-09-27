@@ -93,4 +93,23 @@ class ApiService {
       throw Exception('Failed to get recommendations from Gemini API');
     }
   }
+Future<List<Movie>> searchMovies(String query) async {
+  final response = await http.get(Uri.parse('$baseUrl/search/movie?api_key=$apiKey&query=$query'));
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    print(data); // Log the entire response for debugging
+
+    final List<dynamic> results = data['results'];
+    // Log each movie result for further inspection
+    results.forEach((movie) => print(movie));
+
+    return results.take(10).map((json) => Movie.fromJson(json)).toList();
+  } else {
+    throw Exception('Failed to search movies');
+  }
+}
+
+
+
 }
