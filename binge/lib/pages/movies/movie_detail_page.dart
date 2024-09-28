@@ -28,7 +28,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildMoviePoster(context),
+            _buildMoviePoster(context, isDarkMode),
             SizedBox(height: 16.0),
             _buildTitleText(isDarkMode),
             SizedBox(height: 8.0),
@@ -45,7 +45,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
     );
   }
 
-  Widget _buildMoviePoster(BuildContext context) {
+  Widget _buildMoviePoster(BuildContext context, bool isDarkMode) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -61,8 +61,8 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
           children: [
             IconButton(
               icon: Icon(
-                Icons.bookmark,
-                color: isBookmarked ? Colors.purple : Colors.black,
+                Icons.bookmark_outline_outlined,
+                color: isBookmarked ? Colors.purple : (isDarkMode ? Colors.white : Colors.black),
               ),
               onPressed: () {
                 setState(() {
@@ -78,7 +78,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
             IconButton(
               icon: Icon(
                 Icons.check,
-                color: isWatched ? Colors.purple : Colors.black,
+                color: isWatched ? Colors.purple : (isDarkMode ? Colors.white : Colors.black),
               ),
               onPressed: () {
                 setState(() {
