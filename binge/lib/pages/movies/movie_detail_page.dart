@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'models/movie_model.dart'; // Import the movie model
 import 'services/api_service.dart';
+import 'package:binge/pages/baseScaffold.dart'; // Import your BaseScaffold
 
 class MovieDetailPage extends StatelessWidget {
   final Movie movie;
@@ -9,7 +10,11 @@ class MovieDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return BaseScaffold(
+      title: movie.title,
+      backgroundColor: isDarkMode ? Colors.black87 : Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -23,25 +28,6 @@ class MovieDetailPage extends StatelessWidget {
                   height: 400, // Increased height for the main movie poster
                   width: double.infinity,
                 ),
-                Positioned(
-                  top: 40,
-                  left: 16,
-                  child: IconButton(
-                    icon: Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Icon(
-                    Icons.play_circle_fill,
-                    color: Colors.white,
-                    size: 50,
-                  ),
-                ),
               ],
             ),
             SizedBox(height: 16.0),
@@ -50,7 +36,7 @@ class MovieDetailPage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: isDarkMode ? Colors.white : Colors.black,
               ),
             ),
             SizedBox(height: 8.0),
@@ -73,8 +59,16 @@ class MovieDetailPage extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: Chip(
-                    label: Text(genre.name),
-                    backgroundColor: Colors.grey[800],
+                    label: Text(
+                      genre.name,
+                      style: TextStyle(
+                          color: isDarkMode
+                              ? Colors.black
+                              : Colors.white), // Adjust text color
+                    ),
+                    backgroundColor: isDarkMode
+                        ? Colors.grey[800]
+                        : Colors.grey[300], // Adjust chip color
                   ),
                 );
               }).toList(),
@@ -82,7 +76,10 @@ class MovieDetailPage extends StatelessWidget {
             SizedBox(height: 16.0),
             Text(
               'Synopsis',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? Colors.white : Colors.black),
             ),
             SizedBox(height: 8.0),
             ExpandableText(
@@ -91,14 +88,16 @@ class MovieDetailPage extends StatelessWidget {
             SizedBox(height: 16.0),
             Text(
               'Related Movies',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? Colors.white : Colors.black),
             ),
             SizedBox(height: 8.0),
             RelatedMovies(movieId: movie.id),
           ],
         ),
       ),
-      backgroundColor: Colors.black87,
     );
   }
 }
@@ -118,6 +117,8 @@ class _ExpandableTextState extends State<ExpandableText> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -125,7 +126,11 @@ class _ExpandableTextState extends State<ExpandableText> {
           widget.text,
           maxLines: expanded ? null : widget.maxLines,
           overflow: expanded ? TextOverflow.visible : TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 16, color: Colors.white),
+          style: TextStyle(
+              fontSize: 16,
+              color: isDarkMode
+                  ? Colors.white
+                  : Colors.black), // Adjust text color
         ),
         GestureDetector(
           onTap: () => setState(() => expanded = !expanded),
@@ -141,6 +146,7 @@ class _ExpandableTextState extends State<ExpandableText> {
 
 class RelatedMovies extends StatelessWidget {
   final int movieId;
+
   RelatedMovies({required this.movieId});
 
   @override
@@ -153,9 +159,21 @@ class RelatedMovies extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          return Center(child: Text('Error fetching related movies.'));
+          return Center(
+              child: Text(
+                  'Error fetching related movies.')); // This can be removed if you don't want to show any error message
         } else {
           List<Movie> relatedMovies = snapshot.data as List<Movie>;
+
+          // Filter out movies that are null or invalid
+          relatedMovies =
+              relatedMovies.where((movie) => movie != null).toList();
+
+          // Skip displaying the widget if there are no related movies
+          if (relatedMovies.isEmpty) {
+            return Center(child: Text('No related movies available.'));
+          }
+
           return Container(
             height: 180,
             child: ListView.builder(
@@ -163,35 +181,49 @@ class RelatedMovies extends StatelessWidget {
               itemCount: relatedMovies.length,
               itemBuilder: (context, index) {
                 Movie movie = relatedMovies[index];
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: Image.network(
-                          'https://image.tmdb.org/t/p/w200${movie.posterPath}',
-                          height: 130, // Adjusted height for a better fit
-                          width: 90, // Maintain aspect ratio
-                          fit: BoxFit.cover,
-                        ),
+                return GestureDetector(
+                  onTap: () {
+                    // Navigate to the movie detail page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MovieDetailPage(movie: movie),
                       ),
-                      SizedBox(height: 8.0),
-                      Container(
-                        width: 90, // Ensure the text width matches the poster width
-                        child: Text(
-                          movie.title,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12, // Adjusted font size for better readability
-                            fontWeight: FontWeight.w500,
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8.0),
+                          child: Image.network(
+                            'https://image.tmdb.org/t/p/w200${movie.posterPath}',
+                            height: 130, // Adjusted height for a better fit
+                            width: 90, // Maintain aspect ratio
+                            fit: BoxFit.cover,
                           ),
-                          maxLines: 2, // Limit to two lines
-                          overflow: TextOverflow.ellipsis, // Add ellipsis for long titles
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 8.0),
+                        Container(
+                          width:
+                              90, // Ensure the text width matches the poster width
+                          child: Text(
+                            movie.title,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize:
+                                  12, // Adjusted font size for better readability
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2, // Limit to two lines
+                            overflow: TextOverflow
+                                .ellipsis, // Add ellipsis for long titles
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },

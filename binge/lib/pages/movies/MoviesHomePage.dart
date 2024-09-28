@@ -11,16 +11,25 @@ class MoviesHomePageContent extends StatefulWidget {
 }
 
 class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
-  final ApiService apiService = ApiService(); // Create an instance of ApiService
+  final ApiService apiService = ApiService();
   List<Movie>? movies;
+  List<Movie>? topRatedMovies; // New variable for top-rated movies
+  List<Movie>? searchResults = [];
   String searchQuery = '';
-  List<Movie>? searchResults;
-  FocusNode _focusNode = FocusNode();
+  OverlayEntry? searchOverlay;
+  final FocusNode _searchFocusNode = FocusNode();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     fetchTrendingMovies();
+    fetchTopRatedMovies(); // Fetch top-rated movies
+    _searchFocusNode.addListener(() {
+      if (!_searchFocusNode.hasFocus) {
+        clearSearchOverlay();
+      }
+    });
   }
 
   Future<void> fetchTrendingMovies() async {
@@ -34,226 +43,383 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
     }
   }
 
+  Future<void> fetchTopRatedMovies() async {
+    // New method to fetch top-rated movies
+    try {
+      final List<Movie> ratedMovies = await apiService.fetchTopRatedMovies();
+      setState(() {
+        topRatedMovies = ratedMovies;
+      });
+    } catch (error) {
+      print('Error fetching top-rated movies: $error');
+    }
+  }
+
   Future<void> searchMovies() async {
     if (searchQuery.isNotEmpty) {
       try {
-        final List<Movie> searchedMovies = await apiService.searchMovies(searchQuery);
+        final List<Movie> searchedMovies =
+            await apiService.searchMovies(searchQuery);
         setState(() {
-          searchResults = searchedMovies; // Set searched movies
+          searchResults = searchedMovies;
+          showSearchOverlay();
         });
       } catch (error) {
         print('Error searching movies: $error');
       }
     } else {
-      setState(() {
-        searchResults = null; // Clear search results if query is empty
-      });
-      fetchTrendingMovies(); // Fetch trending movies if search query is empty
+      clearSearchOverlay();
     }
+  }
+
+  void showSearchOverlay() {
+    clearSearchOverlay();
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final position = renderBox.localToGlobal(Offset.zero);
+    double statusBarHeight = MediaQuery.of(context).padding.top;
+
+    searchOverlay = OverlayEntry(
+      builder: (context) => Positioned(
+        top: position.dy + 70 + statusBarHeight,
+        left: position.dx + 16,
+        right: position.dx + 16,
+        child: Material(
+          elevation: 8.0,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(0.0),
+            topRight: Radius.circular(0.0),
+            bottomLeft: Radius.circular(30.0),
+            bottomRight: Radius.circular(30.0),
+          ),
+          child: Container(
+            height: 350,
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: ListView.builder(
+              itemCount: searchResults?.length ?? 0,
+              itemBuilder: (context, index) {
+                final movie = searchResults![index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.all(8.0),
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          movie.title ?? 'Unknown Title',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Rating: ${movie.voteAverage?.toStringAsFixed(1) ?? 'N/A'}',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                    leading: Container(
+                      width: 50,
+                      height: 75,
+                      child: Image.network(
+                        'https://image.tmdb.org/t/p/w92${movie.posterPath}',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey,
+                            child: Icon(Icons.broken_image),
+                          );
+                        },
+                      ),
+                    ),
+                    onTap: () {
+                      clearSearchOverlay();
+                      _searchFocusNode.unfocus();
+                      _searchController.clear();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MovieDetailPage(movie: movie),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    Overlay.of(context)?.insert(searchOverlay!);
+  }
+
+  void clearSearchOverlay() {
+    if (searchOverlay != null) {
+      searchOverlay!.remove();
+      searchOverlay = null;
+    }
+  }
+
+  Future<bool> _onWillPop() async {
+    if (_searchFocusNode.hasFocus) {
+      _searchFocusNode.unfocus();
+      return false;
+    }
+    return true;
   }
 
   @override
   void dispose() {
-    _focusNode.dispose();
+    clearSearchOverlay();
+    _searchFocusNode.removeListener(() {});
+    _searchFocusNode.dispose();
+    _searchController.dispose();
     super.dispose();
-  }
-
-  void _clearSearchResults() {
-    setState(() {
-      searchQuery = '';
-      searchResults = null;
-    });
-    _focusNode.unfocus();
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        _clearSearchResults(); // Clear search results when tapping outside
-      },
-      child: BaseScaffold(
-        body: Center(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 40.0),
-                child: TextField(
-                  focusNode: _focusNode,
-                  decoration: InputDecoration(
-                    hintText: 'Search for movies...',
-                    filled: true,
-                    fillColor: Color(0xFF9166FF),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-                    suffixIcon: IconButton(
-                      icon: Icon(Icons.search),
-                      onPressed: () {
-                        searchMovies(); // Call searchMovies on button press
-                        FocusScope.of(context).unfocus(); // Dismiss keyboard
-                      },
-                      color: Colors.white,
-                    ),
+    double statusBarHeight = MediaQuery.of(context).padding.top;
+
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: GestureDetector(
+        onTap: () {
+          clearSearchOverlay();
+          _searchFocusNode.unfocus();
+        },
+        child: BaseScaffold(
+          resizeToAvoidBottomInset: true, // Change to true to avoid overflow
+          body: SingleChildScrollView(
+            // Wrap in SingleChildScrollView
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start, // Align content to the left
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: statusBarHeight + 16.0,
+                    left: 16.0,
+                    right: 16.0,
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      searchQuery = value; // Update searchQuery
-                    });
-                    searchMovies(); // Trigger search on text change
-                  },
-                  onSubmitted: (value) {
-                    searchMovies(); // Call searchMovies on keyboard submit
-                    FocusScope.of(context).unfocus(); // Dismiss keyboard
-                  },
-                ),
-              ),
-              if (searchResults != null && searchResults!.isNotEmpty)
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black, // Dark mode background
-                      borderRadius: BorderRadius.circular(16.0),
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    decoration: InputDecoration(
+                      hintText: 'Search for movies...',
+                      filled: true,
+                      fillColor: Theme.of(context).scaffoldBackgroundColor,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).dividerColor,
+                          width: 1.0,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(30.0),
+                          topRight: Radius.circular(30.0),
+                          bottomLeft: Radius.circular(0.0),
+                          bottomRight: Radius.circular(0.0),
+                        ),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).primaryColor,
+                          width: 2.0,
+                        ),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.search),
+                        onPressed: () {
+                          searchMovies();
+                        },
+                      ),
                     ),
-                    child: ListView.builder(
-                      itemCount: searchResults!.length,
-                      itemBuilder: (context, index) {
-                        final movie = searchResults![index];
-                        return ListTile(
-                          leading: Image.network(
-                            'https://image.tmdb.org/t/p/w500${movie.posterPath}',
-                            width: 50, // Thumbnail width
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(Icons.error); // Fallback icon if image fails to load
-                            },
-                          ),
-                          title: Text(
-                            movie.title ?? 'Unknown Title',
-                            style: TextStyle(color: Colors.white), // White text color for dark mode
-                          ), 
-                          subtitle: Text(
-                            'Rating: ${movie.voteAverage ?? 'N/A'}',
-                            style: TextStyle(color: Colors.grey), // Grey subtitle color
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MovieDetailPage(movie: movie),
-                              ),
-                            );
-                          },
-                        );
-                      },
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value;
+                        searchMovies();
+                      });
+                    },
+                  ),
+                ),
+                SizedBox(height: 16), // Space below the search bar
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 16.0, bottom: 8.0), // Align to left, add spacing
+                  child: Text(
+                    "Trending Now",
+                    style: TextStyle(
+                      fontSize: 20, // Set font size
+                      fontWeight:
+                          FontWeight.bold, // Bold font for section title
                     ),
                   ),
                 ),
-              Expanded(
-                flex: searchResults != null && searchResults!.isNotEmpty ? 2 : 5, // Adjust flex based on search results
-                child: CarouselSlider.builder(
-                  itemCount: movies?.length ?? 0,
-                  itemBuilder: (context, index, realIndex) {
-                    final movie = movies![index];
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MovieDetailPage(movie: movie),
-                          ),
-                        );
-                      },
-                      child: Stack(
-                        children: [
-                          Container(
-                            margin: EdgeInsets.symmetric(horizontal: 8.0),
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  offset: Offset(0, 4),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16.0),
-                              child: Image.network(
-                                'https://image.tmdb.org/t/p/w500${movie.posterPath}',
-                                fit: BoxFit.cover,
-                                height: 400,
-                                width: double.infinity,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Center(child: Text('Image not available'));
-                                },
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            top: 10,
-                            right: 10,
-                            child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                              child: Row(
+                movies == null
+                    ? Center(
+                        child: CircularProgressIndicator(),
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 0), // Reduce gap
+                        child: CarouselSlider.builder(
+                          itemCount: movies!.length,
+                          itemBuilder: (context, index, realIndex) {
+                            final movie = movies![index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        MovieDetailPage(movie: movie),
+                                  ),
+                                );
+                              },
+                              child: Stack(
                                 children: [
-                                  Icon(Icons.star, color: Colors.amber, size: 16),
-                                  SizedBox(width: 4.0),
-                                  Text(
-                                    movie.voteAverage?.toString() ?? 'N/A',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
+                                  Container(
+                                    width: MediaQuery.of(context).size.width *
+                                        0.8, // Increased width
+                                    margin:
+                                        EdgeInsets.symmetric(horizontal: 8.0),
+                                    decoration: BoxDecoration(
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black26,
+                                          offset: Offset(0, 4),
+                                          blurRadius: 8,
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(16.0),
+                                      child: Image.network(
+                                        'https://image.tmdb.org/t/p/w500${movie.posterPath}',
+                                        fit: BoxFit.cover,
+                                        height: 250, // Height set to 250
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return Container(
+                                            color: Colors.grey,
+                                            child: Icon(Icons.broken_image),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 10,
+                                    left: 10,
+                                    child: Container(
+                                      color: Colors.black54,
+                                      padding: EdgeInsets.all(8.0),
+                                      child: Text(
+                                        movie.title ?? 'Unknown Title',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16.0,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
+                            );
+                          },
+                          options: CarouselOptions(
+                            height: 250.0,
+                            autoPlay: true,
+                            enlargeCenterPage: true,
+                            enableInfiniteScroll: true,
+                            autoPlayAnimationDuration:
+                                Duration(milliseconds: 800),
+                            autoPlayInterval: Duration(seconds: 3),
                           ),
-                          Positioned(
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                              margin: EdgeInsets.symmetric(horizontal: 8.0),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.7),
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                              child: Text(
-                                movie.title ?? 'Unknown Title',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 2,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    );
-                  },
-                  options: CarouselOptions(
-                    height: 400.0,
-                    autoPlay: true,
-                    enlargeCenterPage: true,
-                    viewportFraction: 0.7,
+                SizedBox(height: 16), // Space below the carousel
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 16.0, bottom: 8.0), // Align to left, add spacing
+                  child: Text(
+                    "Top Rated Movies",
+                    style: TextStyle(
+                      fontSize: 20, // Set font size
+                      fontWeight:
+                          FontWeight.bold, // Bold font for section title
+                    ),
                   ),
                 ),
-              ),
-            ],
+                topRatedMovies == null
+                    ? Center(
+                        child: CircularProgressIndicator(),
+                      )
+                    : Container(
+                        height:
+                            250, // Set a fixed height for the horizontal list
+                        child: ListView.builder(
+                          scrollDirection: Axis
+                              .horizontal, // Set scroll direction to horizontal
+                          itemCount: topRatedMovies?.length ?? 0,
+                          itemBuilder: (context, index) {
+                            final movie = topRatedMovies![index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        MovieDetailPage(movie: movie),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width:
+                                    150, // Set a fixed width for each movie item
+                                margin: EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Column(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                      child: Image.network(
+                                        'https://image.tmdb.org/t/p/w500${movie.posterPath}',
+                                        fit: BoxFit.cover,
+                                        height:
+                                            200, // Set a fixed height for the movie poster
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return Container(
+                                            color: Colors.grey,
+                                            child: Icon(Icons.broken_image),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    SizedBox(
+                                        height:
+                                            8.0), // Space between the poster and title
+                                    Text(
+                                      movie.title ?? 'Unknown Title',
+                                      style: TextStyle(
+                                          fontSize: 14.0,
+                                          fontWeight: FontWeight.bold),
+                                      maxLines: 2, // Limit title to 2 lines
+                                      overflow: TextOverflow
+                                          .ellipsis, // Add ellipsis if title is too long
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+              ],
+            ),
           ),
         ),
       ),

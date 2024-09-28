@@ -1,134 +1,83 @@
 import 'package:flutter/material.dart';
-import 'models/movie_model.dart'; // Import your Movie model
+import 'package:binge/pages/baseScaffold.dart'; // Use your BaseScaffold class
 
 class MoviesBookmarked extends StatefulWidget {
-  final List<Movie> bookmarkedMovies;
-
-  MoviesBookmarked({required this.bookmarkedMovies});
-
   @override
   _MoviesBookmarkedState createState() => _MoviesBookmarkedState();
 }
 
 class _MoviesBookmarkedState extends State<MoviesBookmarked> {
-  // Track which movies are bookmarked using a Set
-  Set<int> bookmarkedMovies = {};
-  // Track which movies are marked as completed using a Set
-  Set<int> completedMovies = {};
-
-  // Method to clear all liked movies and bookmarked movies
-  void _clearSelection() {
-    setState(() {
-      bookmarkedMovies.clear();
-      widget.bookmarkedMovies.clear(); // Clear the liked movies list
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("All liked movies have been cleared"),
-        duration: Duration(seconds: 1), // Set duration to 1 second
-      ),
-    );
-  }
-
-  // Method to delete a movie from the list
-  void _deleteMovie(int index) {
-    setState(() {
-      widget.bookmarkedMovies.removeAt(index);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Movie has been deleted"),
-        duration: Duration(seconds: 1), // Set duration to 1 second
-      ),
-    );
-  }
+  List<String> watchlistMovies = [
+    "Movie 1",
+    "Movie 2",
+    "Movie 3"
+  ]; // Example data for Watchlist
+  List<String> watchedMovies = [
+    "Movie 4",
+    "Movie 5"
+  ]; // Example data for Watched
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Bookmarked movies"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.clear_all),
-            onPressed: _clearSelection, // Clear selection on pressed
-          ),
-        ],
-      ),
-      body: widget.bookmarkedMovies.isEmpty
-          ? Center(child: Text("No bookmarked movies"))
-          : ListView.builder(
-              itemCount: widget.bookmarkedMovies.length,
-              itemBuilder: (context, index) {
-                final movie = widget.bookmarkedMovies[index];
-                final isBookmarked = bookmarkedMovies.contains(movie.id);
-                final isCompleted = completedMovies.contains(movie.id);
+    return BaseScaffold(
+      body: SafeArea(
+        // Ensures space for status bar
+        child: DefaultTabController(
+          length: 2, // Two tabs: Watchlist and Watched
+          child: Column(
+            children: [
+              // Tab bar to switch between Watchlist and Watched
+              TabBar(
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.grey,
+                indicatorColor: Colors.white,
+                tabs: [
+                  Tab(text: 'Watchlist'),
+                  Tab(text: 'Watched'),
+                ],
+              ),
+              // TabBarView to load the respective content based on the selected tab
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    // Watchlist tab
+                    _buildMoviesList(
+                        watchlistMovies, 'No movies in your watchlist'),
 
-                return ListTile(
-                  title: Text(
-                    movie.title,
-                    style: TextStyle(
-                      decoration: isCompleted
-                          ? TextDecoration.lineThrough
-                          : TextDecoration.none, // Strike out if completed
-                    ),
-                  ),
-                  leading: IconButton(
-                    icon: Icon(
-                      isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-                      color: isCompleted ? Colors.green : null, // Change color to green if completed
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        if (isCompleted) {
-                          completedMovies.remove(movie.id); // Unmark as completed
-                        } else {
-                          completedMovies.add(movie.id); // Mark as completed
-                        }
-                      });
-                    },
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                          color: isBookmarked ? Color(0xFF9166FF) : null,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            if (isBookmarked) {
-                              bookmarkedMovies.remove(movie.id); // Unbookmark movie
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('${movie.title} has been removed from your watchlist'),
-                                  duration: Duration(seconds: 1), // Set duration to 1 second
-                                ),
-                              );
-                            } else {
-                              bookmarkedMovies.add(movie.id); // Bookmark movie
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('${movie.title} has been added to your watchlist'),
-                                  duration: Duration(seconds: 1), // Set duration to 1 second
-                                ),
-                              );
-                            }
-                          });
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {
-                          _deleteMovie(index); // Delete movie from the list
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                    // Watched tab
+                    _buildMoviesList(
+                        watchedMovies, 'No movies marked as watched'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
+  }
+
+  // Helper method to build movie list for Watchlist or Watched tabs
+  Widget _buildMoviesList(List<String> movies, String emptyMessage) {
+    if (movies.isEmpty) {
+      return Center(
+        child: Text(
+          emptyMessage,
+          style: TextStyle(fontSize: 20, color: Colors.white),
+        ),
+      );
+    } else {
+      return ListView.builder(
+        itemCount: movies.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(
+              movies[index],
+              style: TextStyle(color: Colors.white),
+            ),
+          );
+        },
+      );
+    }
   }
 }

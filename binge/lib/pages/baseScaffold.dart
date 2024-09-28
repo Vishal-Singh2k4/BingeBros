@@ -7,8 +7,9 @@ class BaseScaffold extends StatelessWidget {
   final Widget? floatingActionButton;
   final Widget? bottomNavigationBar;
   final Color? titleTextColor;
-  final Color? backgroundColor; // Added backgroundColor parameter
-  
+  final Color? backgroundColor;
+  final bool? resizeToAvoidBottomInset; // Add this line
+
   const BaseScaffold({
     Key? key,
     required this.body,
@@ -17,7 +18,8 @@ class BaseScaffold extends StatelessWidget {
     this.floatingActionButton,
     this.bottomNavigationBar,
     this.titleTextColor,
-    this.backgroundColor, // Added backgroundColor initialization
+    this.backgroundColor,
+    this.resizeToAvoidBottomInset, // Add this line
   }) : super(key: key);
 
   @override
@@ -37,8 +39,8 @@ class BaseScaffold extends StatelessWidget {
             end: Alignment.bottomRight,
           );
 
-    // Set title text color based on the theme if not provided
-    final Color effectiveTitleTextColor = titleTextColor ?? (isDarkMode ? Colors.white : Colors.black);
+    final Color effectiveTitleTextColor =
+        titleTextColor ?? (isDarkMode ? Colors.white : Colors.black);
 
     return Scaffold(
       appBar: appBar ??
@@ -47,7 +49,7 @@ class BaseScaffold extends StatelessWidget {
                   title: Text(
                     title!,
                     style: TextStyle(
-                      color: effectiveTitleTextColor, // Use calculated title text color
+                      color: effectiveTitleTextColor,
                     ),
                   ),
                   backgroundColor: Colors.transparent,
@@ -55,7 +57,7 @@ class BaseScaffold extends StatelessWidget {
                 )
               : null),
       body: Container(
-        color: backgroundColor, // Use backgroundColor if provided
+        color: backgroundColor,
         decoration: backgroundColor == null
             ? BoxDecoration(
                 gradient: backgroundGradient,
@@ -65,6 +67,8 @@ class BaseScaffold extends StatelessWidget {
       ),
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: bottomNavigationBar,
+      resizeToAvoidBottomInset:
+          resizeToAvoidBottomInset ?? false, // Add this line
     );
   }
 }

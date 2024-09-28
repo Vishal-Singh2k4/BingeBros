@@ -47,7 +47,8 @@ class _GenreSelectionPageState extends State<GenreSelectionPage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => MoviesSwiperPage(selectedGenres: selectedGenres),
+          builder: (context) =>
+              MoviesSwiperPage(selectedGenres: selectedGenres),
         ),
       );
     } else {
@@ -76,10 +77,13 @@ class _GenreSelectionPageState extends State<GenreSelectionPage> {
                   margin: EdgeInsets.symmetric(horizontal: 4.0),
                   child: ElevatedButton(
                     onPressed: () {
-                      updateSelectedGenres(index, !selectedGenres.contains(genre));
+                      updateSelectedGenres(
+                          index, !selectedGenres.contains(genre));
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: selectedGenres.contains(genre) ? Colors.blue : Colors.grey,
+                      backgroundColor: selectedGenres.contains(genre)
+                          ? Colors.blue
+                          : Colors.grey,
                     ),
                     child: Text(genre),
                   ),
@@ -119,7 +123,8 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
   }
 
   void fetchMoviesByGenres() async {
-    List<Movie> movies = await apiService.fetchMoviesByGenres(widget.selectedGenres);
+    List<Movie> movies =
+        await apiService.fetchMoviesByGenres(widget.selectedGenres);
     setState(() {
       swipeItems = movies.map((movie) {
         return SwipeItem(
@@ -170,25 +175,38 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
                                       fit: BoxFit.cover,
                                       height: 250,
                                       width: double.infinity,
-                                      loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                                        if (loadingProgress == null) return child;
+                                      loadingBuilder: (BuildContext context,
+                                          Widget child,
+                                          ImageChunkEvent? loadingProgress) {
+                                        if (loadingProgress == null)
+                                          return child;
                                         return Center(
                                           child: CircularProgressIndicator(
-                                            value: loadingProgress.expectedTotalBytes != null
-                                                ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
+                                            value: loadingProgress
+                                                        .expectedTotalBytes !=
+                                                    null
+                                                ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    (loadingProgress
+                                                            .expectedTotalBytes ??
+                                                        1)
                                                 : null,
                                           ),
                                         );
                                       },
-                                      errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
-                                        return Center(child: Text('Image not available'));
+                                      errorBuilder: (BuildContext context,
+                                          Object error,
+                                          StackTrace? stackTrace) {
+                                        return Center(
+                                            child: Text('Image not available'));
                                       },
                                     )
                                   : Container(
                                       height: 250,
                                       width: double.infinity,
                                       color: Colors.grey,
-                                      child: Center(child: Text('No Image Available')),
+                                      child: Center(
+                                          child: Text('No Image Available')),
                                     ),
                             ),
                             Padding(
@@ -224,7 +242,8 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => LikedMoviesPage(likedMovies: likedMovies),
+                        builder: (context) =>
+                            LikedMoviesPage(likedMovies: likedMovies),
                       ),
                     );
                   },
@@ -253,7 +272,8 @@ class LikedMoviesPage extends StatelessWidget {
                 final movie = likedMovies[index];
                 return ListTile(
                   title: Text(movie.title),
-                  leading: Image.network('https://image.tmdb.org/t/p/w500${movie.posterPath}'),
+                  leading: Image.network(
+                      'https://image.tmdb.org/t/p/w500${movie.posterPath}'),
                 );
               },
             ),

@@ -23,7 +23,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  // Update the _pages list dynamically based on the selected category
   List<Widget> _getPages(String category) {
     switch (category) {
       case 'Games':
@@ -44,7 +43,7 @@ class _HomePageState extends State<HomePage> {
         return [
           MoviesHomePageContent(),
           MoviesSwiperPage(),
-          MoviesBookmarked(bookmarkedMovies: [],),
+          MoviesBookmarked(),
           SettingsPage(),
         ];
       case 'Anime':
@@ -74,16 +73,15 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        // Prevent back navigation
-        return false;
+        return false; // Prevent back navigation
       },
       child: Consumer<CategoryNotifier>(
         builder: (context, categoryNotifier, _) {
           return Scaffold(
+            resizeToAvoidBottomInset: false, // Prevent resizing for keyboard
             body: IndexedStack(
               index: _selectedIndex,
-              children: _getPages(categoryNotifier
-                  .selectedCategory), // Get the pages based on the selected category
+              children: _getPages(categoryNotifier.selectedCategory),
             ),
             bottomNavigationBar: BottomNavigationBar(
               items: const <BottomNavigationBarItem>[
