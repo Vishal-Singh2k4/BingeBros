@@ -4,9 +4,14 @@ import 'package:binge/pages/HomePage.dart';
 import 'package:binge/pages/card_planet.dart';
 import 'package:concentric_transition/concentric_transition.dart';
 
-class OnboardingPage extends StatelessWidget {
+class OnboardingPage extends StatefulWidget {
   OnboardingPage({Key? key}) : super(key: key);
 
+  @override
+  _OnboardingPageState createState() => _OnboardingPageState();
+}
+
+class _OnboardingPageState extends State<OnboardingPage> {
   final data = [
     CardPlanetData(
       title: "Welcome to BingeBros!",
@@ -22,7 +27,7 @@ class OnboardingPage extends StatelessWidget {
       title: "Movies",
       subtitle: "Get personalized movie recommendations based on your taste.",
       lottieAsset: "assets/movie_animation.json",
-      backgroundColor: const Color(0xFFCCBAFA), // Hexadecimal color for #CCBAFA
+      backgroundColor: const Color(0xFFCCBAFA),
       titleColor: Colors.purple,
       subtitleColor: const Color.fromRGBO(0, 10, 56, 1),
       background: LottieBuilder.asset("assets/bg.json"),
@@ -58,17 +63,40 @@ class OnboardingPage extends StatelessWidget {
     ),
   ];
 
+  // Variable to track the current index of the page
+  int _currentIndex = 0;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: ConcentricPageView(
-        colors: data.map((e) => e.backgroundColor).toList(),
-        itemCount: data.length,
-        itemBuilder: (int index) {
-          // Determine if the current page is the last page
-          bool isLastPage = index == data.length - 1;
-          return CardPlanet(data: data[index], isLastPage: isLastPage);
-        },
+    return WillPopScope(
+      onWillPop: () async {
+        // Check if we are on the first page
+        if (_currentIndex == 0) {
+          // Do nothing when on the first page
+          return false;
+        } else {
+          // Move to the previous page
+          setState(() {
+            _currentIndex--;
+          });
+          return false; // Prevent the default back button behavior
+        }
+      },
+      child: Scaffold(
+        body: ConcentricPageView(
+          colors: data.map((e) => e.backgroundColor).toList(),
+          itemCount: data.length,
+          onChange: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          itemBuilder: (int index) {
+            // Determine if the current page is the last page
+            bool isLastPage = index == data.length - 1;
+            return CardPlanet(data: data[index], isLastPage: isLastPage);
+          },
+        ),
       ),
     );
   }
