@@ -91,6 +91,41 @@ class ApiService {
     }
   }
 
+  Future<List<Movie>> fetchMonthTopRatedMovies() async {
+    final DateTime now = DateTime.now();
+    final DateTime lastMonth = DateTime(now.year, now.month - 1, now.day);
+
+    final response = await http.get(
+      Uri.parse(
+          '$baseUrl/discover/movie?api_key=$apiKey&sort_by=vote_average.desc&primary_release_date.gte=${lastMonth.toIso8601String()}&primary_release_date.lte=${now.toIso8601String()}'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List<dynamic> results = data['results'];
+      return results.map((json) => Movie.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load top rated movies of the month');
+    }
+  }
+
+  Future<List<Movie>> fetchYearTopRatedMovies() async {
+    final int currentYear = DateTime.now().year;
+
+    final response = await http.get(
+      Uri.parse(
+          '$baseUrl/discover/movie?api_key=$apiKey&sort_by=vote_average.desc&primary_release_year=$currentYear'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List<dynamic> results = data['results'];
+      return results.map((json) => Movie.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load top rated movies of the year');
+    }
+  }
+
   Future<List<Movie>> fetchTopRatedMovies() async {
     final response =
         await http.get(Uri.parse('$baseUrl/movie/top_rated?api_key=$apiKey'));

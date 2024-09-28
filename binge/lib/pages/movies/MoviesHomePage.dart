@@ -13,7 +13,10 @@ class MoviesHomePageContent extends StatefulWidget {
 class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
   final ApiService apiService = ApiService();
   List<Movie>? movies;
-  List<Movie>? topRatedMovies; // New variable for top-rated movies
+  List<Movie>? topRatedMovies;
+  List<Movie>? monthTopRatedMovies; // New variable for month top-rated movies
+  List<Movie>? yearTopRatedMovies;
+  // New variable for top-rated movies
   List<Movie>? searchResults = [];
   String searchQuery = '';
   OverlayEntry? searchOverlay;
@@ -24,7 +27,10 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
   void initState() {
     super.initState();
     fetchTrendingMovies();
-    fetchTopRatedMovies(); // Fetch top-rated movies
+    fetchTopRatedMovies();
+    fetchMonthTopRatedMovies(); // Fetch top-rated movies of the month
+    fetchYearTopRatedMovies();
+    // Fetch top-rated movies
     _searchFocusNode.addListener(() {
       if (!_searchFocusNode.hasFocus) {
         clearSearchOverlay();
@@ -52,6 +58,30 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
       });
     } catch (error) {
       print('Error fetching top-rated movies: $error');
+    }
+  }
+
+  Future<void> fetchMonthTopRatedMovies() async {
+    try {
+      final List<Movie> ratedMovies =
+          await apiService.fetchMonthTopRatedMovies();
+      setState(() {
+        monthTopRatedMovies = ratedMovies;
+      });
+    } catch (error) {
+      print('Error fetching month top-rated movies: $error');
+    }
+  }
+
+  Future<void> fetchYearTopRatedMovies() async {
+    try {
+      final List<Movie> ratedMovies =
+          await apiService.fetchYearTopRatedMovies();
+      setState(() {
+        yearTopRatedMovies = ratedMovies;
+      });
+    } catch (error) {
+      print('Error fetching year top-rated movies: $error');
     }
   }
 
@@ -182,6 +212,8 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
   @override
   Widget build(BuildContext context) {
     double statusBarHeight = MediaQuery.of(context).padding.top;
+    const String placeholderImageUrl =
+        'https://www.huber-usa.com/daisy_website_files/_processed_/8/0/csm_no-image_d5c4ab1322.jpg';
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -346,7 +378,7 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
                   padding: const EdgeInsets.only(
                       left: 16.0, bottom: 8.0), // Align to left, add spacing
                   child: Text(
-                    "Top Rated Movies",
+                    "Top Rated Movies of all time",
                     style: TextStyle(
                       fontSize: 20, // Set font size
                       fontWeight:
@@ -354,6 +386,7 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
                     ),
                   ),
                 ),
+
                 topRatedMovies == null
                     ? Center(
                         child: CircularProgressIndicator(),
@@ -392,9 +425,12 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
                                             200, // Set a fixed height for the movie poster
                                         errorBuilder:
                                             (context, error, stackTrace) {
-                                          return Container(
-                                            color: Colors.grey,
-                                            child: Icon(Icons.broken_image),
+                                          // Return the placeholder image when there's an error
+                                          return Image.network(
+                                            placeholderImageUrl,
+                                            fit: BoxFit.cover,
+                                            height:
+                                                200, // Maintain the same height
                                           );
                                         },
                                       ),
@@ -410,6 +446,171 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
                                       maxLines: 2, // Limit title to 2 lines
                                       overflow: TextOverflow
                                           .ellipsis, // Add ellipsis if title is too long
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                SizedBox(height: 16), // Space below the carousel
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 16.0, bottom: 8.0), // Align to left, add spacing
+                  child: Text(
+                    "Top Rated Movies of the Month",
+                    style: TextStyle(
+                      fontSize: 20, // Set font size
+                      fontWeight:
+                          FontWeight.bold, // Bold font for section title
+                    ),
+                  ),
+                ),
+                monthTopRatedMovies == null
+                    ? Center(
+                        child: CircularProgressIndicator(),
+                      )
+                    : Container(
+                        height: 250,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: monthTopRatedMovies?.length ?? 0,
+                          itemBuilder: (context, index) {
+                            final movie = monthTopRatedMovies![index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        MovieDetailPage(movie: movie),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: 150,
+                                margin: EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Column(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                      child: Image.network(
+                                        'https://image.tmdb.org/t/p/w500${movie.posterPath}',
+                                        fit: BoxFit.cover,
+                                        height: 200,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          // Return the placeholder image when there's an error
+                                          return Image.network(
+                                            placeholderImageUrl,
+                                            fit: BoxFit.cover,
+                                            height: 200,
+                                          );
+                                        },
+                                        // Optionally handle loading state
+                                        loadingBuilder:
+                                            (context, child, loadingProgress) {
+                                          if (loadingProgress == null)
+                                            return child;
+                                          return Center(
+                                            child: CircularProgressIndicator(
+                                              value: loadingProgress
+                                                          .expectedTotalBytes !=
+                                                      null
+                                                  ? loadingProgress
+                                                          .cumulativeBytesLoaded /
+                                                      (loadingProgress
+                                                              .expectedTotalBytes ??
+                                                          1)
+                                                  : null,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    SizedBox(height: 8.0),
+                                    Text(
+                                      movie.title ?? 'Unknown Title',
+                                      style: TextStyle(
+                                          fontSize: 14.0,
+                                          fontWeight: FontWeight.bold),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                SizedBox(height: 16), // Space below the carousel
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 16.0, bottom: 8.0), // Align to left, add spacing
+                  child: Text(
+                    "Top Rated Movies of the Year",
+                    style: TextStyle(
+                      fontSize: 20, // Set font size
+                      fontWeight:
+                          FontWeight.bold, // Bold font for section title
+                    ),
+                  ),
+                ),
+                yearTopRatedMovies == null
+                    ? Center(
+                        child: CircularProgressIndicator(),
+                      )
+                    : Container(
+                        height: 250,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: yearTopRatedMovies?.length ?? 0,
+                          itemBuilder: (context, index) {
+                            final movie = yearTopRatedMovies![index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        MovieDetailPage(movie: movie),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: 150,
+                                margin: EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Column(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                      child: Image.network(
+                                        'https://image.tmdb.org/t/p/w500${movie.posterPath}',
+                                        fit: BoxFit.cover,
+                                        height: 200,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          // Return the placeholder image when there's an error
+                                          return Image.network(
+                                            placeholderImageUrl,
+                                            fit: BoxFit.cover,
+                                            height:
+                                                200, // Maintain the same height
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    SizedBox(height: 8.0),
+                                    Text(
+                                      movie.title ?? 'Unknown Title',
+                                      style: TextStyle(
+                                          fontSize: 14.0,
+                                          fontWeight: FontWeight.bold),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),

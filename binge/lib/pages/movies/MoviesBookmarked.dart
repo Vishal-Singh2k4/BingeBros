@@ -19,6 +19,14 @@ class _MoviesBookmarkedState extends State<MoviesBookmarked> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    // Define colors based on the current theme (dark or light)
+    final Color primaryTextColor = isDarkMode ? Colors.white : Colors.black;
+    final Color unselectedTextColor =
+        isDarkMode ? Colors.grey[400]! : Colors.grey[800]!;
+    final Color tabIndicatorColor = isDarkMode ? Colors.white : Colors.black;
+
     return BaseScaffold(
       body: SafeArea(
         // Ensures space for status bar
@@ -28,9 +36,9 @@ class _MoviesBookmarkedState extends State<MoviesBookmarked> {
             children: [
               // Tab bar to switch between Watchlist and Watched
               TabBar(
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: Colors.white,
+                labelColor: primaryTextColor,
+                unselectedLabelColor: unselectedTextColor,
+                indicatorColor: tabIndicatorColor,
                 tabs: [
                   Tab(text: 'Watchlist'),
                   Tab(text: 'Watched'),
@@ -41,12 +49,12 @@ class _MoviesBookmarkedState extends State<MoviesBookmarked> {
                 child: TabBarView(
                   children: [
                     // Watchlist tab
-                    _buildMoviesList(
-                        watchlistMovies, 'No movies in your watchlist'),
+                    _buildMoviesList(watchlistMovies,
+                        'No movies in your watchlist', primaryTextColor),
 
                     // Watched tab
-                    _buildMoviesList(
-                        watchedMovies, 'No movies marked as watched'),
+                    _buildMoviesList(watchedMovies,
+                        'No movies marked as watched', primaryTextColor),
                   ],
                 ),
               ),
@@ -58,12 +66,13 @@ class _MoviesBookmarkedState extends State<MoviesBookmarked> {
   }
 
   // Helper method to build movie list for Watchlist or Watched tabs
-  Widget _buildMoviesList(List<String> movies, String emptyMessage) {
+  Widget _buildMoviesList(
+      List<String> movies, String emptyMessage, Color textColor) {
     if (movies.isEmpty) {
       return Center(
         child: Text(
           emptyMessage,
-          style: TextStyle(fontSize: 20, color: Colors.white),
+          style: TextStyle(fontSize: 20, color: textColor),
         ),
       );
     } else {
@@ -73,7 +82,7 @@ class _MoviesBookmarkedState extends State<MoviesBookmarked> {
           return ListTile(
             title: Text(
               movies[index],
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: textColor),
             ),
           );
         },
