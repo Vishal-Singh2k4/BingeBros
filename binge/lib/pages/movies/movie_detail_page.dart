@@ -221,10 +221,9 @@ class _ExpandableTextState extends State<ExpandableText> {
       ],
     );
   }
-}
-
-class RelatedMovies extends StatelessWidget {
+}class RelatedMovies extends StatelessWidget {
   final int movieId;
+  final String placeholderImageUrl = 'https://www.huber-usa.com/daisy_website_files/processed/8/0/csm_no-image_d5c4ab1322.jpg';
 
   RelatedMovies({required this.movieId});
 
@@ -238,7 +237,8 @@ class RelatedMovies extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          return Center(child: Text('Error fetching related movies.'));
+          // Display an error message for internet issues
+          return Center(child: Text('Internet Error'));
         } else {
           final List<Movie> relatedMovies = snapshot.data ?? [];
 
@@ -276,6 +276,15 @@ class RelatedMovies extends StatelessWidget {
                             height: 130,
                             width: 90,
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              // Use the placeholder image if there is an error loading the original image
+                              return Image.network(
+                                placeholderImageUrl,
+                                height: 130,
+                                width: 90,
+                                fit: BoxFit.cover,
+                              );
+                            },
                           ),
                         ),
                         SizedBox(height: 8.0),
