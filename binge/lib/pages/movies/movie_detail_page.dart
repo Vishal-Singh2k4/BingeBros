@@ -46,6 +46,8 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
   }
 
   Widget _buildMoviePoster(BuildContext context, bool isDarkMode) {
+    final String placeholderImageUrl = 'https://www.huber-usa.com/daisy_website_files/processed/8/0/csm_no-image_d5c4ab1322.jpg';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -54,6 +56,15 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
           fit: BoxFit.cover,
           height: 400,
           width: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            // Use the placeholder image if there is an error loading the original image
+            return Image.network(
+              placeholderImageUrl,
+              fit: BoxFit.cover,
+              height: 400,
+              width: double.infinity,
+            );
+          },
         ),
         SizedBox(height: 16.0), // Add space between the poster and icons
         Row(
@@ -221,7 +232,9 @@ class _ExpandableTextState extends State<ExpandableText> {
       ],
     );
   }
-}class RelatedMovies extends StatelessWidget {
+}
+
+class RelatedMovies extends StatelessWidget {
   final int movieId;
   final String placeholderImageUrl = 'https://www.huber-usa.com/daisy_website_files/processed/8/0/csm_no-image_d5c4ab1322.jpg';
 
@@ -288,18 +301,14 @@ class _ExpandableTextState extends State<ExpandableText> {
                           ),
                         ),
                         SizedBox(height: 8.0),
-                        Container(
-                          width: 90,
-                          child: Text(
-                            movie.title,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                        Text(
+                          movie.title,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
