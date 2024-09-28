@@ -236,7 +236,7 @@ class _ExpandableTextState extends State<ExpandableText> {
 
 class RelatedMovies extends StatelessWidget {
   final int movieId;
-  final String placeholderImageUrl = 'https://via.placeholder.com/200x300.png?text=No+Image'; // Updated placeholder image URL
+  final String placeholderImageUrl = 'https://via.placeholder.com/200x300.png?text=No+Image';
 
   RelatedMovies({required this.movieId});
 
@@ -250,12 +250,10 @@ class RelatedMovies extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          // Display an error message for internet issues
           return Center(child: Text('Internet Error'));
         } else {
           final List<Movie> relatedMovies = snapshot.data ?? [];
 
-          // Skip displaying the widget if there are no related movies
           if (relatedMovies.isEmpty) {
             return Center(child: Text('No related movies available.'));
           }
@@ -269,7 +267,6 @@ class RelatedMovies extends StatelessWidget {
                 final Movie movie = relatedMovies[index];
                 return GestureDetector(
                   onTap: () {
-                    // Navigate to the movie detail page
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -290,7 +287,6 @@ class RelatedMovies extends StatelessWidget {
                             width: 90,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
-                              // Use the placeholder image if there is an error loading the original image
                               return Image.network(
                                 placeholderImageUrl,
                                 height: 130,
@@ -301,14 +297,19 @@ class RelatedMovies extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 8.0),
-                        Text(
-                          movie.title,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                        // Updated Text widget to allow wrapping
+                        Container(
+                          width: 90, // Set the width to match the image
+                          child: Text(
+                            movie.title,
+                            style: TextStyle(
+                              fontSize: 12, // Reduced font size
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 2, // Allow up to 2 lines
+                            overflow: TextOverflow.ellipsis, // Show ellipsis for overflow
+                            softWrap: true, // Allow wrapping
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
