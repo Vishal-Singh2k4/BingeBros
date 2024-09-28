@@ -46,7 +46,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
   }
 
   Widget _buildMoviePoster(BuildContext context, bool isDarkMode) {
-    final String placeholderImageUrl = 'https://www.huber-usa.com/daisy_website_files/processed/8/0/csm_no-image_d5c4ab1322.jpg';
+    final String placeholderImageUrl = 'https://via.placeholder.com/400x600.png?text=No+Image'; // Updated placeholder image URL
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -236,7 +236,7 @@ class _ExpandableTextState extends State<ExpandableText> {
 
 class RelatedMovies extends StatelessWidget {
   final int movieId;
-  final String placeholderImageUrl = 'https://www.huber-usa.com/daisy_website_files/processed/8/0/csm_no-image_d5c4ab1322.jpg';
+  final String placeholderImageUrl = 'https://via.placeholder.com/200x300.png?text=No+Image'; // Updated placeholder image URL
 
   RelatedMovies({required this.movieId});
 
