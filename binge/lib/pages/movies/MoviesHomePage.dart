@@ -293,7 +293,17 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
                 ),
                 movies == null
                     ? Center(
-                        child: CircularProgressIndicator(),
+                        child: SizedBox(
+                          height: 250, // Space reserved for the entire item
+                          child: Center(
+                            child: SizedBox(
+                              height:
+                                  40, // Small size for the CircularProgressIndicator
+                              width: 40,
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                        ),
                       )
                     : Padding(
                         padding: const EdgeInsets.only(top: 0), // Reduce gap
@@ -389,7 +399,17 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
 
                 topRatedMovies == null
                     ? Center(
-                        child: CircularProgressIndicator(),
+                        child: SizedBox(
+                          height: 250, // Space reserved for the entire item
+                          child: Center(
+                            child: SizedBox(
+                              height:
+                                  40, // Small size for the CircularProgressIndicator
+                              width: 40,
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                        ),
                       )
                     : Container(
                         height:
@@ -469,7 +489,17 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
                 ),
                 monthTopRatedMovies == null
                     ? Center(
-                        child: CircularProgressIndicator(),
+                        child: SizedBox(
+                          height: 250, // Space reserved for the entire item
+                          child: Center(
+                            child: SizedBox(
+                              height:
+                                  40, // Small size for the CircularProgressIndicator
+                              width: 40,
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                        ),
                       )
                     : Container(
                         height: 250,
@@ -561,7 +591,17 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
                 ),
                 yearTopRatedMovies == null
                     ? Center(
-                        child: CircularProgressIndicator(),
+                        child: SizedBox(
+                          height: 250, // Space reserved for the entire item
+                          child: Center(
+                            child: SizedBox(
+                              height:
+                                  40, // Small size for the CircularProgressIndicator
+                              width: 40,
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                        ),
                       )
                     : Container(
                         height: 250,
