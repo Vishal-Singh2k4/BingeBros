@@ -2,19 +2,37 @@ import 'package:flutter/material.dart';
 import 'models/movie_model.dart'; // Import the movie model
 import 'services/api_service.dart';
 import 'package:binge/pages/baseScaffold.dart'; // Import your BaseScaffold
+import 'firebase_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MovieDetailPage extends StatefulWidget {
   final Movie movie;
+  final String userId; // Add userId parameter
 
-  MovieDetailPage({required this.movie});
+  MovieDetailPage({required this.movie, required this.userId});
 
   @override
   _MovieDetailPageState createState() => _MovieDetailPageState();
 }
 
 class _MovieDetailPageState extends State<MovieDetailPage> {
+  final FirebaseService _firebaseService = FirebaseService();
   bool isBookmarked = false;
   bool isWatched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    isBookmarked =
+        await _firebaseService.isBookmarked(widget.userId, widget.movie.id);
+    isWatched =
+        await _firebaseService.isWatched(widget.userId, widget.movie.id);
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +64,6 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
   }
 
   Widget _buildMoviePoster(BuildContext context, bool isDarkMode) {
-    final String placeholderImageUrl = 'https://via.placeholder.com/400x600.png?text=No+Image'; // Updated placeholder image URL
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -57,31 +73,35 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
           height: 400,
           width: double.infinity,
           errorBuilder: (context, error, stackTrace) {
-            // Use the placeholder image if there is an error loading the original image
             return Image.network(
-              placeholderImageUrl,
+              'https://via.placeholder.com/400x600.png?text=No+Image',
               fit: BoxFit.cover,
               height: 400,
               width: double.infinity,
             );
           },
         ),
-        SizedBox(height: 16.0), // Add space between the poster and icons
+        SizedBox(height: 16.0),
         Row(
-          mainAxisAlignment: MainAxisAlignment.end, // Align icons to the right
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
             IconButton(
               icon: Icon(
                 Icons.bookmark_outline_outlined,
-                color: isBookmarked ? Colors.purple : (isDarkMode ? Colors.white : Colors.black),
+                color: isBookmarked
+                    ? Colors.purple
+                    : (isDarkMode ? Colors.white : Colors.black),
               ),
-              onPressed: () {
+              onPressed: () async {
+                await _firebaseService.toggleBookmark(
+                    widget.userId, widget.movie.id);
                 setState(() {
                   isBookmarked = !isBookmarked;
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${widget.movie.title} ${isBookmarked ? 'added to Watchlist!' : 'removed from watchlist!'}'),
+                    content: Text(
+                        '${widget.movie.title} ${isBookmarked ? 'added to Watchlist!' : 'removed from watchlist!'}'),
                   ),
                 );
               },
@@ -89,15 +109,20 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
             IconButton(
               icon: Icon(
                 Icons.check,
-                color: isWatched ? Colors.purple : (isDarkMode ? Colors.white : Colors.black),
+                color: isWatched
+                    ? Colors.green
+                    : (isDarkMode ? Colors.white : Colors.black),
               ),
-              onPressed: () {
+              onPressed: () async {
+                await _firebaseService.toggleWatched(
+                    widget.userId, widget.movie.id);
                 setState(() {
                   isWatched = !isWatched;
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${widget.movie.title} ${isWatched ? 'marked as watched!' : 'removed from watched!'}'),
+                    content: Text(
+                        '${widget.movie.title} ${isWatched ? 'marked as watched!' : 'removed from watched!'}'),
                   ),
                 );
               },
@@ -236,12 +261,15 @@ class _ExpandableTextState extends State<ExpandableText> {
 
 class RelatedMovies extends StatelessWidget {
   final int movieId;
-  final String placeholderImageUrl = 'https://via.placeholder.com/200x300.png?text=No+Image';
+  final String placeholderImageUrl =
+      'https://via.placeholder.com/200x300.png?text=No+Image';
 
   RelatedMovies({required this.movieId});
 
   @override
   Widget build(BuildContext context) {
+    final User? user = FirebaseAuth.instance.currentUser;
+    final String userId = user != null ? user.uid : '';
     final apiService = ApiService(); // Create an instance of ApiService
 
     return FutureBuilder<List<Movie>>(
@@ -270,7 +298,8 @@ class RelatedMovies extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => MovieDetailPage(movie: movie),
+                        builder: (context) =>
+                            MovieDetailPage(movie: movie, userId: userId),
                       ),
                     );
                   },
@@ -307,7 +336,8 @@ class RelatedMovies extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                             maxLines: 2, // Allow up to 2 lines
-                            overflow: TextOverflow.ellipsis, // Show ellipsis for overflow
+                            overflow: TextOverflow
+                                .ellipsis, // Show ellipsis for overflow
                             softWrap: true, // Allow wrapping
                           ),
                         ),

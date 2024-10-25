@@ -157,188 +157,195 @@ class _MoviesSwiperPageState extends State<MoviesSwiperPage> {
     );
   }
 
-@override
-Widget build(BuildContext context) {
-  return BaseScaffold(
-    body: SafeArea(
-      child: Container(
-        decoration: BoxDecoration(
-          // Show gradient only after genres are selected
-          gradient: genresSelected
-              ? LinearGradient(
-                  colors: [
-                    Colors.red.withOpacity(0.5),
-                    Colors.green.withOpacity(0.5)
-                  ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                )
-              : null,
-        ),
-        child: Column(
-          children: [
-            SizedBox(height: 10), // Add space at the top for padding
-            if (selectedGenres.isEmpty)
-              Expanded(
-                child: Center(
-                  child: Text(
-                    "No genres selected. Please select genres to view movies.",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                    textAlign: TextAlign.center,
+  @override
+  Widget build(BuildContext context) {
+    return BaseScaffold(
+      body: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            // Show gradient only after genres are selected
+            gradient: genresSelected
+                ? LinearGradient(
+                    colors: [
+                      Colors.red.withOpacity(0.5),
+                      Colors.green.withOpacity(0.5)
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  )
+                : null,
+          ),
+          child: Column(
+            children: [
+              SizedBox(height: 10), // Add space at the top for padding
+              if (selectedGenres.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      "No genres selected. Please select genres to view movies.",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
-              )
-            else if (swipeItems.isEmpty)
-              Expanded(
-                child: Center(
-                  child: CircularProgressIndicator(), // Circular progress indicator
-                ),
-              )
-            else
-              Expanded(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: matchEngine == null
-                          ? Center(child: CircularProgressIndicator()) // Show loading indicator if matchEngine is null
-                          : SwipeCards(
-                              matchEngine: matchEngine!,
-                              itemBuilder: (BuildContext context, int index) {
-                                final movie =
-                                    swipeItems[index].content as Movie;
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0, vertical: 8.0),
-                                  child: Card(
-                                    elevation: 4,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(16.0),
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Expanded(
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(16.0),
-                                            child: movie.posterPath != null
-                                                ? Image.network(
-                                                    'https://image.tmdb.org/t/p/w500${movie.posterPath}',
-                                                    fit: BoxFit.cover,
-                                                    width: double.infinity,
-                                                    loadingBuilder: (BuildContext
-                                                            context,
-                                                        Widget child,
-                                                        ImageChunkEvent?
-                                                            loadingProgress) {
-                                                      if (loadingProgress ==
-                                                          null) return child;
-                                                      return Center(
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                          value: loadingProgress
-                                                                      .expectedTotalBytes !=
-                                                                  null
-                                                              ? loadingProgress
-                                                                      .cumulativeBytesLoaded /
-                                                                  (loadingProgress
-                                                                          .expectedTotalBytes ??
-                                                                      1)
-                                                              : null,
-                                                        ),
-                                                      );
-                                                    },
-                                                    errorBuilder:
-                                                        (BuildContext context,
-                                                            Object error,
-                                                            StackTrace?
-                                                                stackTrace) {
-                                                      return Center(
+                )
+              else if (swipeItems.isEmpty)
+                Expanded(
+                  child: Center(
+                    child:
+                        CircularProgressIndicator(), // Circular progress indicator
+                  ),
+                )
+              else
+                Expanded(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: matchEngine == null
+                            ? Center(
+                                child:
+                                    CircularProgressIndicator()) // Show loading indicator if matchEngine is null
+                            : SwipeCards(
+                                matchEngine: matchEngine!,
+                                itemBuilder: (BuildContext context, int index) {
+                                  final movie =
+                                      swipeItems[index].content as Movie;
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16.0, vertical: 8.0),
+                                    child: Card(
+                                      elevation: 4,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(16.0),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Expanded(
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(16.0),
+                                              child: movie.posterPath != null
+                                                  ? Image.network(
+                                                      'https://image.tmdb.org/t/p/w500${movie.posterPath}',
+                                                      fit: BoxFit.cover,
+                                                      width: double.infinity,
+                                                      loadingBuilder: (BuildContext
+                                                              context,
+                                                          Widget child,
+                                                          ImageChunkEvent?
+                                                              loadingProgress) {
+                                                        if (loadingProgress ==
+                                                            null) return child;
+                                                        return Center(
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                            value: loadingProgress
+                                                                        .expectedTotalBytes !=
+                                                                    null
+                                                                ? loadingProgress
+                                                                        .cumulativeBytesLoaded /
+                                                                    (loadingProgress
+                                                                            .expectedTotalBytes ??
+                                                                        1)
+                                                                : null,
+                                                          ),
+                                                        );
+                                                      },
+                                                      errorBuilder:
+                                                          (BuildContext context,
+                                                              Object error,
+                                                              StackTrace?
+                                                                  stackTrace) {
+                                                        return Center(
+                                                            child: Text(
+                                                                'Image not available'));
+                                                      },
+                                                    )
+                                                  : Container(
+                                                      height: 150,
+                                                      width: double.infinity,
+                                                      color: Colors.grey,
+                                                      child: Center(
                                                           child: Text(
-                                                              'Image not available'));
-                                                    },
-                                                  )
-                                                : Container(
-                                                    height: 150,
-                                                    width: double.infinity,
-                                                    color: Colors.grey,
-                                                    child: Center(
-                                                        child: Text(
-                                                            'No Image Available')),
-                                                  ),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(
-                                            movie.title,
-                                            style: TextStyle(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold,
+                                                              'No Image Available')),
+                                                    ),
                                             ),
-                                            textAlign: TextAlign.center,
                                           ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              movie.title,
+                                              style: TextStyle(
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                onStackFinished: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: Text("End of Movies"),
+                                      content: Text(
+                                          "You've gone through all the movies. Would you like to start again?"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                            fetchMoviesByGenres();
+                                          },
+                                          child: Text("Yes"),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text("No"),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                );
-                              },
-                              onStackFinished: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: Text("End of Movies"),
-                                    content: Text(
-                                        "You've gone through all the movies. Would you like to start again?"),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                          fetchMoviesByGenres();
-                                        },
-                                        child: Text("Yes"),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                        child: Text("No"),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                    SizedBox(height: 10), // Add space between movie cards and button
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  MoviesLikedPage(likedMovies: likedMovies)),
-                        );
-                      },
-                      child: Text("View Liked Movies"),
-                    ),
-                    SizedBox(height: 10), // Add space at the bottom for padding
-                  ],
+                                  );
+                                },
+                              ),
+                      ),
+                      SizedBox(
+                          height:
+                              10), // Add space between movie cards and button
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    MoviesLikedPage(likedMovies: likedMovies)),
+                          );
+                        },
+                        child: Text("View Liked Movies"),
+                      ),
+                      SizedBox(
+                          height: 10), // Add space at the bottom for padding
+                    ],
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-    floatingActionButton: FloatingActionButton(
-      onPressed: () {
-        openGenresModal(context);
-      },
-      child: Icon(Icons.filter_list),
-    ),
-  );
-}
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          openGenresModal(context);
+        },
+        child: Icon(Icons.filter_list),
+      ),
+    );
+  }
 }

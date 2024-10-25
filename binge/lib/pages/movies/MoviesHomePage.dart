@@ -4,6 +4,7 @@ import 'services/api_service.dart'; // Import the API service
 import 'models/movie_model.dart'; // Import the model file
 import 'movie_detail_page.dart'; // Import the movie detail page
 import 'package:binge/pages/baseScaffold.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MoviesHomePageContent extends StatefulWidget {
   @override
@@ -107,6 +108,8 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
     final RenderBox renderBox = context.findRenderObject() as RenderBox;
     final position = renderBox.localToGlobal(Offset.zero);
     double statusBarHeight = MediaQuery.of(context).padding.top;
+    final User? user = FirebaseAuth.instance.currentUser;
+    final String userId = user != null ? user.uid : '';
 
     searchOverlay = OverlayEntry(
       builder: (context) => Positioned(
@@ -170,7 +173,8 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => MovieDetailPage(movie: movie),
+                          builder: (context) =>
+                              MovieDetailPage(movie: movie, userId: userId),
                         ),
                       );
                     },
@@ -212,6 +216,8 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
   @override
   Widget build(BuildContext context) {
     double statusBarHeight = MediaQuery.of(context).padding.top;
+    final User? user = FirebaseAuth.instance.currentUser;
+    final String userId = user != null ? user.uid : '';
     const String placeholderImageUrl =
         'https://www.huber-usa.com/daisy_website_files/_processed_/8/0/csm_no-image_d5c4ab1322.jpg';
 
@@ -316,8 +322,8 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        MovieDetailPage(movie: movie),
+                                    builder: (context) => MovieDetailPage(
+                                        movie: movie, userId: userId),
                                   ),
                                 );
                               },
@@ -425,8 +431,8 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        MovieDetailPage(movie: movie),
+                                    builder: (context) => MovieDetailPage(
+                                        movie: movie, userId: userId),
                                   ),
                                 );
                               },
@@ -513,8 +519,8 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        MovieDetailPage(movie: movie),
+                                    builder: (context) => MovieDetailPage(
+                                        movie: movie, userId: userId),
                                   ),
                                 );
                               },
@@ -615,8 +621,8 @@ class _MoviesHomePageContentState extends State<MoviesHomePageContent> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        MovieDetailPage(movie: movie),
+                                    builder: (context) => MovieDetailPage(
+                                        movie: movie, userId: userId),
                                   ),
                                 );
                               },

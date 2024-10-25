@@ -109,6 +109,18 @@ class ApiService {
     }
   }
 
+  Future<Movie> fetchMovieById(String movieId) async {
+    final response =
+        await http.get(Uri.parse('$baseUrl/movie/$movieId?api_key=$apiKey'));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return Movie.fromJson(data);
+    } else {
+      throw Exception('Failed to load movie');
+    }
+  }
+
   Future<List<Movie>> fetchYearTopRatedMovies() async {
     final int currentYear = DateTime.now().year;
 

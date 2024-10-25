@@ -64,6 +64,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onItemTapped(int index) {
+    // If the index is for the Movies Bookmarked page (index 2), refresh the movies
+    if (index == 2) {
+      MoviesBookmarked.shouldRefreshNotifier.value = true;
+    }
+
     setState(() {
       _selectedIndex = index;
     });
