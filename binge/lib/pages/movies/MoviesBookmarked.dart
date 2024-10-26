@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'models/movie_model.dart'; // Import your Movie model
 import 'services/api_service.dart'; // Import your Movie model
 import 'firebase_service.dart'; // Import your Firebase service
+import 'movie_detail_page.dart'; // Import the MovieDetailPage
 
 class MoviesBookmarked extends StatefulWidget {
   static final GlobalKey<_MoviesBookmarkedState> moviesBookmarkedKey =
@@ -164,6 +165,9 @@ class _MoviesBookmarkedState extends State<MoviesBookmarked>
 
   Widget _buildMoviesList(
       List<Movie> movies, String emptyMessage, Color textColor) {
+    final User? user = FirebaseAuth.instance.currentUser;
+    final String userId = user?.uid ?? '';
+
     if (movies.isEmpty) {
       return Center(
         child: Text(
@@ -175,29 +179,37 @@ class _MoviesBookmarkedState extends State<MoviesBookmarked>
       return ListView.builder(
         itemCount: movies.length,
         itemBuilder: (context, index) {
+          final movie = movies[index];
           return Column(
             children: [
               ListTile(
                 leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                      8.0), // Set the radius for rounded corners
+                  borderRadius: BorderRadius.circular(8.0),
                   child: Image.network(
-                    'https://image.tmdb.org/t/p/w500${movies[index].posterPath}', // Use the movie poster path
+                    'https://image.tmdb.org/t/p/w500${movie.posterPath}',
                     width: 50,
                     fit: BoxFit.cover,
                   ),
                 ),
                 title: Text(
-                  movies[index].title,
+                  movie.title,
                   style: TextStyle(color: textColor),
                 ),
                 trailing: IconButton(
                   icon: Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _handleDeleteMovie(movies[index]),
+                  onPressed: () => _handleDeleteMovie(movie),
                 ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          MovieDetailPage(movie: movie, userId: userId),
+                    ),
+                  );
+                },
               ),
-              // Add space between each movie
-              SizedBox(height: 10), // Adjust the height as needed
+              SizedBox(height: 10),
             ],
           );
         },
@@ -207,8 +219,7 @@ class _MoviesBookmarkedState extends State<MoviesBookmarked>
 
   @override
   void dispose() {
-    _tabController
-        .dispose(); // Dispose the TabController when the widget is removed
+    _tabController.dispose();
     super.dispose();
   }
 }

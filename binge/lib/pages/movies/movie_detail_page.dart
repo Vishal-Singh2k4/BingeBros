@@ -52,8 +52,6 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
             SizedBox(height: 8.0),
             _buildReleaseDateRow(),
             SizedBox(height: 8.0),
-            _buildGenreChips(isDarkMode),
-            SizedBox(height: 16.0),
             _buildSynopsisSection(isDarkMode),
             SizedBox(height: 16.0),
             _buildRelatedMoviesSection(),
@@ -160,25 +158,6 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
     );
   }
 
-  Widget _buildGenreChips(bool isDarkMode) {
-    return Row(
-      children: widget.movie.genres.map((genre) {
-        return Padding(
-          padding: const EdgeInsets.only(right: 8.0),
-          child: Chip(
-            label: Text(
-              genre.name,
-              style: TextStyle(
-                color: isDarkMode ? Colors.black : Colors.white,
-              ),
-            ),
-            backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[300],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
   Widget _buildSynopsisSection(bool isDarkMode) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,6 +179,9 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
   }
 
   Widget _buildRelatedMoviesSection() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final Color textColor = isDarkMode ? Colors.white : Colors.black;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -208,7 +190,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: textColor,
           ),
         ),
         SizedBox(height: 8.0),
@@ -259,7 +241,7 @@ class _ExpandableTextState extends State<ExpandableText> {
   }
 }
 
-class RelatedMovies extends StatelessWidget {
+class RelatedMovies extends StatefulWidget {
   final int movieId;
   final String placeholderImageUrl =
       'https://via.placeholder.com/200x300.png?text=No+Image';
@@ -267,18 +249,50 @@ class RelatedMovies extends StatelessWidget {
   RelatedMovies({required this.movieId});
 
   @override
+  _RelatedMoviesState createState() => _RelatedMoviesState();
+}
+
+class _RelatedMoviesState extends State<RelatedMovies> {
+  late Future<List<Movie>> _relatedMoviesFuture;
+  final ApiService _apiService = ApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    _relatedMoviesFuture = _fetchRelatedMovies();
+  }
+
+  Future<List<Movie>> _fetchRelatedMovies() async {
+    return _apiService.getRelatedMovies(widget.movieId);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
     final String userId = user != null ? user.uid : '';
-    final apiService = ApiService(); // Create an instance of ApiService
 
     return FutureBuilder<List<Movie>>(
-      future: apiService.getRelatedMovies(movieId),
+      future: _relatedMoviesFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          return Center(child: Text('Internet Error'));
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Failed to load related movies.'),
+                IconButton(
+                  icon: Icon(Icons.refresh),
+                  onPressed: () {
+                    setState(() {
+                      _relatedMoviesFuture = _fetchRelatedMovies();
+                    });
+                  },
+                ),
+              ],
+            ),
+          );
         } else {
           final List<Movie> relatedMovies = snapshot.data ?? [];
 
@@ -317,7 +331,7 @@ class RelatedMovies extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Image.network(
-                                placeholderImageUrl,
+                                widget.placeholderImageUrl,
                                 height: 130,
                                 width: 90,
                                 fit: BoxFit.cover,
@@ -326,19 +340,17 @@ class RelatedMovies extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 8.0),
-                        // Updated Text widget to allow wrapping
                         Container(
-                          width: 90, // Set the width to match the image
+                          width: 90,
                           child: Text(
                             movie.title,
                             style: TextStyle(
-                              fontSize: 12, // Reduced font size
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
-                            maxLines: 2, // Allow up to 2 lines
-                            overflow: TextOverflow
-                                .ellipsis, // Show ellipsis for overflow
-                            softWrap: true, // Allow wrapping
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: true,
                           ),
                         ),
                       ],
