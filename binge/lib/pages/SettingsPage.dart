@@ -540,10 +540,9 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildDeleteAccountButton(Color primaryTextColor) {
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
+      child: TextButton(
         onPressed: _showDeleteAccountDialog,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
+        style: TextButton.styleFrom(
           padding: EdgeInsets.symmetric(vertical: 16.0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
@@ -552,9 +551,8 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Text(
           'Delete Account',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+            color: Colors.red,
+            fontSize: 13,
           ),
         ),
       ),
