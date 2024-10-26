@@ -12,7 +12,7 @@ class ApiService {
 
   ApiService() {
     // Initialize the Gemini API with your API key in the constructor body
-    gemini = Gemini.init(apiKey: 'AIzaSyBPvmKxGignLAvfxrlu6HB6iaWht7rYhnw');
+    gemini = Gemini.init(apiKey: 'AIzaSyCrP98B26g2SbnZQLrHNSXDNXjOdIvaVbI');
   }
 
   // Fetch trending movies for the "Trending" section
