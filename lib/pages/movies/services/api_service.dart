@@ -4,15 +4,16 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:flutter_gemini/flutter_gemini.dart';
 import '../models/movie_model.dart'; // Adjust the path as needed
+import 'api_service_key.dart';  // Import the api_service_key.dart to access API keys
 
 class ApiService {
-  final String apiKey = '827ff2b76ef87771bf42fef7226d8093';
-  final String baseUrl = 'https://api.themoviedb.org/3';
+  final String apiKey = ApiServiceKeys.movieDbApiKey;
+  final String baseUrl = ApiServiceKeys.movieDbBaseUrl;
   late final Gemini gemini; // Use late initialization for the gemini instance
 
   ApiService() {
     // Initialize the Gemini API with your API key in the constructor body
-    gemini = Gemini.init(apiKey: 'AIzaSyCrP98B26g2SbnZQLrHNSXDNXjOdIvaVbI');
+    gemini = Gemini.init(apiKey: ApiServiceKeys.geminiApiKey);
   }
 
   // Fetch trending movies for the "Trending" section

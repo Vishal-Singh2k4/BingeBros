@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'firebase_api_key.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -41,46 +42,46 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDF4SuW09XDf4FMS7J8EeaIX4HO3ecPyYE',
-    appId: '1:425634001546:web:8759190c1caaa3a9107373',
-    messagingSenderId: '425634001546',
-    projectId: 'binge-1fe39',
-    authDomain: 'binge-1fe39.firebaseapp.com',
-    storageBucket: 'binge-1fe39.appspot.com',
+    apiKey: FirebaseApiKeys.webApiKey,
+    appId: FirebaseApiKeys.appIdWeb,
+    messagingSenderId: FirebaseApiKeys.messagingSenderId,
+    projectId: FirebaseApiKeys.projectId,
+    authDomain: FirebaseApiKeys.authDomain,
+    storageBucket: FirebaseApiKeys.storageBucket,
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBUG_VysEsKId22RkB2JVwad7HfxxrMMA4',
-    appId: '1:425634001546:android:e775d9f94e750c41107373',
-    messagingSenderId: '425634001546',
-    projectId: 'binge-1fe39',
-    storageBucket: 'binge-1fe39.appspot.com',
+    apiKey: FirebaseApiKeys.androidApiKey,
+    appId: FirebaseApiKeys.appIdAndroid,
+    messagingSenderId: FirebaseApiKeys.messagingSenderId,
+    projectId: FirebaseApiKeys.projectId,
+    storageBucket: FirebaseApiKeys.storageBucket,
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDF_SQyIqp1UVJj_M1BxtSd26SiHL_PB0U',
-    appId: '1:425634001546:ios:a3adcf08e5dd4b32107373',
-    messagingSenderId: '425634001546',
-    projectId: 'binge-1fe39',
-    storageBucket: 'binge-1fe39.appspot.com',
-    iosBundleId: 'com.example.binge',
+    apiKey: FirebaseApiKeys.iosApiKey,
+    appId: FirebaseApiKeys.appIdIos,
+    messagingSenderId: FirebaseApiKeys.messagingSenderId,
+    projectId: FirebaseApiKeys.projectId,
+    storageBucket: FirebaseApiKeys.storageBucket,
+    iosBundleId: FirebaseApiKeys.iosBundleId,
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDF_SQyIqp1UVJj_M1BxtSd26SiHL_PB0U',
-    appId: '1:425634001546:ios:a3adcf08e5dd4b32107373',
-    messagingSenderId: '425634001546',
-    projectId: 'binge-1fe39',
-    storageBucket: 'binge-1fe39.appspot.com',
-    iosBundleId: 'com.example.binge',
+    apiKey: FirebaseApiKeys.iosApiKey,
+    appId: FirebaseApiKeys.appIdIos,
+    messagingSenderId: FirebaseApiKeys.messagingSenderId,
+    projectId: FirebaseApiKeys.projectId,
+    storageBucket: FirebaseApiKeys.storageBucket,
+    iosBundleId: FirebaseApiKeys.iosBundleId,
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDF4SuW09XDf4FMS7J8EeaIX4HO3ecPyYE',
-    appId: '1:425634001546:web:a91cc1b9a5a564f1107373',
-    messagingSenderId: '425634001546',
-    projectId: 'binge-1fe39',
-    authDomain: 'binge-1fe39.firebaseapp.com',
-    storageBucket: 'binge-1fe39.appspot.com',
+    apiKey: FirebaseApiKeys.webApiKey,
+    appId: FirebaseApiKeys.appIdWindows,
+    messagingSenderId: FirebaseApiKeys.messagingSenderId,
+    projectId: FirebaseApiKeys.projectId,
+    authDomain: FirebaseApiKeys.authDomain,
+    storageBucket: FirebaseApiKeys.storageBucket,
   );
 }
